@@ -1,0 +1,2128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DrNoteAI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap');
+
+:root {
+  /* Dark modern palette */
+  --g: #f2f2f2; --g2: #dcdcdc; --g3: #a8a8a8; --g4: #6e6e6e; --g5: #3a3a3a;
+  --g6: #262626; --g7: #141414; --g8: #1c1c1c; --white: #1a1a1a;
+  --teal: #2ad8a0; --teal-l: #0f2a22; --teal-m: #1f6e55; --teal-d: #7af0c4;
+  --red: #ff6060; --red-l: #311414; --red-m: #6e2a2a;
+  --amber: #f2a73a; --amber-l: #2e1f0b; --amber-m: #6e4a1a;
+  --r: 10px;
+  --glow-teal: 0 0 0 3px rgba(42,216,160,.15);
+}
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+::-webkit-scrollbar-track { background: transparent; }
+::selection { background: rgba(42,216,160,.25); color: #fff; }
+input, select, textarea, button { color-scheme: dark; }
+input:focus, select:focus, textarea:focus { box-shadow: var(--glow-teal); }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Geist', system-ui, sans-serif; background: radial-gradient(1200px 800px at 80% -10%, rgba(42,216,160,.07), transparent 60%), radial-gradient(900px 600px at -10% 110%, rgba(90,120,255,.05), transparent 60%), var(--g7); color: var(--g); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ── HEADER ── */
+header { background: var(--white); border-bottom: 1px solid var(--g6); height: 48px; display: flex; align-items: center; padding: 0 16px; gap: 12px; flex-shrink: 0; }
+.logo { font-size: 15px; font-weight: 600; letter-spacing: -.4px; display: flex; align-items: center; gap: 6px; }
+.logo-pulse { width: 6px; height: 6px; background: var(--teal); border-radius: 50%; animation: blink 2.4s ease-in-out infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+.patient-tag { background: var(--g7); border: 1px solid var(--g6); border-radius: 20px; padding: 3px 10px 3px 7px; font-size: 12px; color: var(--g2); display: flex; align-items: center; gap: 7px; }
+.av { width: 20px; height: 20px; background: var(--teal); color: #fff; border-radius: 50%; font-size: 9px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+.api-ok-badge { display: none; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.api-ok-badge.is-ok { color: var(--teal-d); background: var(--teal-l); border: 1px solid var(--teal-m); }
+.api-ok-badge.is-error { color: #ffc6c2; background: var(--red-l); border: 1px solid var(--red-m); }
+.api-ok-badge.is-pending { color: var(--amber); background: var(--amber-l); border: 1px solid var(--amber-m); }
+
+/* ── CONSULT TIMER ── */
+.consult-timer {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 10px 4px 8px;
+  border: 1px solid var(--g6); border-radius: 20px;
+  font-size: 12px; cursor: pointer; transition: all .15s;
+  background: var(--g7);
+  user-select: none;
+}
+.consult-timer:hover { border-color: var(--g4); }
+.consult-timer.running { background: var(--red-l); border-color: var(--red-m); }
+.ct-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--g5); flex-shrink: 0; transition: background .2s; }
+.consult-timer.running .ct-dot { background: var(--red); animation: blink .9s ease-in-out infinite; }
+.ct-time { font-family: 'Geist Mono', monospace; font-size: 13px; font-weight: 500; color: var(--g2); min-width: 42px; }
+.consult-timer.running .ct-time { color: var(--red); }
+.ct-label { font-size: 11px; color: var(--g4); }
+
+/* Completion flag */
+.completion-flag {
+  display: none; margin-left: auto; align-items: center; gap: 7px;
+  padding: 4px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 500;
+  transition: all .3s;
+}
+.completion-flag.partial { display: flex; background: var(--amber-l); color: var(--amber); border: 1px solid var(--amber-m); }
+.completion-flag.complete { display: flex; background: var(--teal-l); color: var(--teal-d); border: 1px solid var(--teal-m); }
+.flag-pct { font-family: 'Geist Mono', monospace; font-weight: 600; }
+
+.hright { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--g4); }
+.hright .completion-flag { margin-left: 0; }
+
+/* ── TABS ── */
+.tabs { background: var(--white); border-bottom: 1px solid var(--g6); display: flex; padding: 0 16px; flex-shrink: 0; }
+.tab { border: none; background: transparent; font-family: inherit; font-size: 12px; color: var(--g4); padding: 10px 14px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .14s; display: flex; align-items: center; gap: 6px; }
+.tab:hover { color: var(--g2); }
+.tab.active { color: var(--g); font-weight: 500; border-bottom-color: var(--g); }
+.tab-n { width: 16px; height: 16px; border-radius: 4px; font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; background: var(--g6); color: var(--g3); }
+.tab.active .tab-n { background: var(--g); color: #fff; }
+
+/* ── SCREENS ── */
+.screens { flex: 1; overflow: hidden; position: relative; }
+.screen { position: absolute; inset: 0; overflow-y: auto; padding: 20px; display: none; }
+.screen.active { display: block; }
+
+/* ── SCREEN 1: DATOS ── */
+.form-wrap { max-width: 720px; display: flex; flex-direction: column; gap: 10px; }
+.fsec { background: var(--white); border: 1px solid var(--g6); border-radius: var(--r); overflow: hidden; }
+.fsec-head { padding: 10px 16px; border-bottom: 1px solid var(--g6); display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+.fsec-title { font-size: 12px; font-weight: 500; color: var(--g); flex: 1; }
+.fsec-badge { font-size: 10px; color: var(--g4); }
+.fsec-arrow { font-size: 11px; color: var(--g5); transition: transform .15s; }
+.fsec-arrow.open { transform: rotate(90deg); }
+.fsec-body { padding: 14px 16px; }
+.fsec-body.closed { display: none; }
+.fg2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.fg3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.fg4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; }
+.fspan2 { grid-column: span 2; }
+.fl { display: flex; flex-direction: column; gap: 4px; }
+.fl label { font-size: 10px; font-weight: 500; color: var(--g4); letter-spacing: .05em; text-transform: uppercase; }
+.fl input, .fl select, .fl textarea { border: 1px solid var(--g6); border-radius: 6px; padding: 7px 10px; font-family: 'Geist', sans-serif; font-size: 13px; color: var(--g); background: var(--g8); outline: none; transition: border-color .13s; width: 100%; }
+.fl input:focus, .fl select:focus, .fl textarea:focus { border-color: var(--teal); background: var(--white); }
+.fl input.mono { font-family: 'Geist Mono', monospace; font-size: 12px; }
+.fl textarea { resize: none; line-height: 1.6; }
+.fl .unit { position: relative; }
+.fl .unit input { padding-right: 40px; }
+.fl .unit span { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 10px; color: var(--g4); font-family: 'Geist Mono', monospace; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.chip { border: 1px solid var(--g5); border-radius: 20px; padding: 3px 10px; font-size: 11px; color: var(--g3); cursor: pointer; transition: all .12s; user-select: none; }
+.chip.on { background: var(--teal-l); border-color: var(--teal-m); color: var(--teal-d); font-weight: 500; }
+.das-calc { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; }
+.das-result { margin-top: 12px; padding: 12px 14px; background: var(--g8); border: 1px solid var(--g6); border-radius: var(--r); display: flex; align-items: center; gap: 14px; }
+.das-number { font-size: 32px; font-weight: 300; font-family: 'Geist Mono', monospace; letter-spacing: -1px; color: var(--g); line-height: 1; margin-bottom: 2px; }
+.das-number.remision{color:var(--teal)} .das-number.baja{color:var(--teal-d)} .das-number.moderada{color:var(--amber)} .das-number.alta{color:var(--red)}
+.das-label-act { font-size: 12px; font-weight: 500; }
+.das-track { flex: 1; height: 4px; background: var(--g6); border-radius: 2px; position: relative; overflow: visible; }
+.das-track-fill { position: absolute; inset: 0; border-radius: 2px; background: linear-gradient(90deg, var(--teal) 0%, var(--amber) 55%, var(--red) 100%); }
+.das-pin { position: absolute; top: -5px; width: 2px; height: 14px; background: var(--g); border-radius: 1px; transition: left .3s; }
+.das-range { display: flex; justify-content: space-between; font-size: 9px; color: var(--g5); margin-top: 2px; }
+.diag-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--teal-l); border: 1px solid var(--teal-m); border-radius: 6px; padding: 5px 10px; font-size: 12px; color: var(--teal); font-weight: 500; margin-bottom: 8px; }
+/* CIE-10 autocomplete */
+.cie10-list { position: absolute; top: 100%; left: 0; right: 0; background: #1e1e1e; border: 1px solid var(--g6); border-radius: 8px; margin-top: 4px; max-height: 240px; overflow-y: auto; z-index: 50; display: none; box-shadow: 0 8px 24px rgba(0,0,0,.5); }
+.cie10-list.show { display: block; }
+.cie10-item { padding: 8px 12px; cursor: pointer; font-size: 12px; color: var(--g2); border-bottom: 1px solid var(--g6); display: flex; justify-content: space-between; gap: 10px; transition: background .1s; }
+.cie10-item:hover, .cie10-item.active { background: var(--teal-l); color: var(--teal-d); }
+.cie10-item:last-child { border-bottom: none; }
+.cie10-code { font-family: 'Geist Mono', monospace; font-weight: 600; color: var(--teal); font-size: 11px; white-space: nowrap; }
+.cie10-desc { flex: 1; }
+.cie10-empty { padding: 10px 12px; font-size: 11px; color: var(--g4); font-style: italic; }
+.sec-micro { font-size: 10px; font-weight: 600; letter-spacing: .07em; color: var(--g4); text-transform: uppercase; margin-bottom: 8px; margin-top: 14px; }
+.sec-micro:first-child { margin-top: 0; }
+
+/* ── SCREEN 2: DICTADO (con sidebar) ── */
+.dictado-layout {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 16px;
+  max-width: 900px;
+}
+
+/* SIDEBAR CHECKLIST */
+.sidebar-check {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: sticky;
+  top: 0;
+}
+
+.sidebar-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  color: var(--g4);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.check-card {
+  background: var(--white);
+  border: 1px solid var(--g6);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+
+.check-head {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--g6);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--g2);
+}
+
+.check-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--g7);
+  font-size: 11px;
+  color: var(--g3);
+  transition: background .1s;
+}
+
+.check-item:last-child { border-bottom: none; }
+
+.check-item.done { color: var(--g2); }
+.check-item.done .ci-icon { background: var(--teal); color: #fff; }
+
+.ci-icon {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--g5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 8px;
+  transition: all .2s;
+}
+
+.ci-icon svg { width: 8px; height: 8px; }
+
+/* Overall approval */
+.approve-card {
+  background: var(--white);
+  border: 1px solid var(--g6);
+  border-radius: var(--r);
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.approve-progress {
+  height: 4px;
+  background: var(--g6);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.approve-fill {
+  height: 100%;
+  background: var(--teal);
+  border-radius: 2px;
+  transition: width .4s;
+  width: 0%;
+}
+
+.approve-pct {
+  font-size: 11px;
+  color: var(--g4);
+  display: flex;
+  justify-content: space-between;
+}
+
+.approve-pct strong { color: var(--g2); }
+
+.btn-approve {
+  width: 100%;
+  border: none;
+  border-radius: 6px;
+  padding: 10px;
+  font-family: 'Geist', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--g6);
+  color: var(--g4);
+  transition: all .2s;
+}
+
+.btn-approve.ready {
+  background: var(--teal);
+  color: #fff;
+}
+
+.btn-approve.ready:hover { background: var(--teal-d); }
+.btn-approve.approved { background: var(--teal-d); color: #fff; }
+
+/* Draft save */
+.draft-row {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-draft {
+  flex: 1;
+  border: 1px solid var(--g6);
+  border-radius: 6px;
+  padding: 7px 8px;
+  font-family: 'Geist', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--white);
+  color: var(--g3);
+  transition: all .13s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.btn-draft:hover { border-color: var(--g4); color: var(--g2); }
+.btn-draft.saved { border-color: var(--teal-m); color: var(--teal); background: var(--teal-l); }
+
+/* ── DICTADO MAIN ── */
+.dictado-main { display: flex; flex-direction: column; gap: 12px; }
+
+.ctx-pill { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--g4); padding: 6px 12px; background: var(--white); border: 1px solid var(--g6); border-radius: 20px; }
+.ctx-dot { width: 6px; height: 6px; background: var(--teal); border-radius: 50%; }
+
+/* API Key */
+.api-sec { background: var(--white); border: 1px solid var(--g6); border-radius: var(--r); overflow: hidden; }
+.api-head { padding: 9px 14px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; font-size: 12px; }
+.api-body { padding: 10px 14px; border-top: 1px solid var(--g7); display: none; }
+.api-body.open { display: block; }
+
+/* Format selector */
+.fmt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.fmt-card { border: 1px solid var(--g6); border-radius: var(--r); padding: 10px 12px; cursor: pointer; transition: all .14s; background: var(--white); }
+.fmt-card:hover { border-color: var(--g4); }
+.fmt-card.selected { border-color: var(--g); background: var(--g8); }
+.fmt-name { font-size: 12px; font-weight: 500; color: var(--g2); margin-bottom: 2px; }
+.fmt-card.selected .fmt-name { color: var(--g); }
+.fmt-desc { font-size: 11px; color: var(--g4); }
+.fmt-sections { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 6px; }
+.fmt-tag { font-size: 9px; background: var(--g7); color: var(--g3); border-radius: 3px; padding: 1px 5px; font-family: 'Geist Mono', monospace; }
+
+/* Mic zone */
+.mic-zone { background: var(--white); border: 1px solid var(--g6); border-radius: var(--r); padding: 24px 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.mic-btn { width: 72px; height: 72px; border-radius: 50%; border: 1.5px solid var(--g5); background: var(--g7); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .16s; }
+.mic-btn:hover { background: var(--teal-l); border-color: var(--teal-m); }
+.mic-btn.recording { background: var(--red-l); border-color: var(--red); animation: rpulse 1.4s ease-in-out infinite; }
+@keyframes rpulse { 0%,100%{box-shadow:0 0 0 0 rgba(217,64,64,.2)} 50%{box-shadow:0 0 0 10px rgba(217,64,64,0)} }
+.mic-btn svg { width: 26px; height: 26px; color: var(--g3); }
+.mic-btn.recording svg { color: var(--red); }
+.waveform { display: flex; align-items: center; gap: 3px; height: 22px; opacity: 0; transition: opacity .3s; }
+.waveform.show { opacity: 1; }
+.waveform span { width: 3px; background: var(--red); border-radius: 2px; animation: wave .8s ease-in-out infinite; height: 4px; }
+.waveform span:nth-child(3){animation-delay:.1s;height:12px} .waveform span:nth-child(4){animation-delay:.05s;height:20px}
+.waveform span:nth-child(5){animation-delay:.15s;height:16px} .waveform span:nth-child(6){animation-delay:.2s;height:8px}
+@keyframes wave { 0%,100%{transform:scaleY(1)} 50%{transform:scaleY(2)} }
+.mic-label { font-size: 12px; color: var(--g3); text-align: center; }
+.rec-timer { font-family: 'Geist Mono', monospace; font-size: 18px; font-weight: 500; color: var(--red); display: none; }
+.rec-timer.show { display: block; }
+
+/* Processing */
+.processing { display: none; align-items: center; gap: 10px; padding: 12px 14px; background: var(--white); border: 1px solid var(--g6); border-radius: var(--r); font-size: 12px; color: var(--g3); }
+.processing.show { display: flex; }
+.spin { width: 15px; height: 15px; border: 1.5px solid var(--g5); border-top-color: var(--teal); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* ── RESULT SECTIONS ── */
+.result-wrap { display: none; flex-direction: column; gap: 8px; }
+.result-wrap.show { display: flex; }
+
+.rsec {
+  background: var(--white);
+  border: 1px solid var(--g6);
+  border-radius: var(--r);
+  overflow: hidden;
+  transition: border-color .2s;
+}
+
+/* Semaphore states */
+.rsec.sem-empty { border-left: 3px solid var(--g5); }
+.rsec.sem-low { border-left: 3px solid var(--red); }
+.rsec.sem-med { border-left: 3px solid var(--amber); }
+.rsec.sem-ok { border-left: 3px solid var(--teal); }
+
+.rsec-head { display: flex; align-items: center; justify-content: space-between; padding: 9px 14px; border-bottom: 1px solid var(--g7); background: var(--g8); }
+.rsec-left { display: flex; align-items: center; gap: 8px; }
+.rsec-letter { width: 22px; height: 22px; background: var(--g); color: #fff; border-radius: 5px; font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+.rsec-name { font-size: 12px; font-weight: 500; color: var(--g2); }
+.rsec-right { display: flex; align-items: center; gap: 6px; }
+
+.ai-tag { font-size: 10px; color: var(--teal); background: var(--teal-l); border-radius: 3px; padding: 2px 6px; font-weight: 500; }
+
+/* Semaphore dot */
+.sem-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--g5);
+  flex-shrink: 0;
+  transition: background .3s;
+}
+.rsec.sem-low .sem-dot { background: var(--red); }
+.rsec.sem-med .sem-dot { background: var(--amber); }
+.rsec.sem-ok .sem-dot { background: var(--teal); }
+
+/* Confidence badge */
+.conf-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-weight: 500;
+  display: none;
+}
+.conf-badge.low { display: inline; background: var(--red-l); color: var(--red); }
+.conf-badge.med { display: inline; background: var(--amber-l); color: var(--amber); }
+.conf-badge.high { display: none; }
+
+/* Missing alert */
+.missing-alert {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--amber-l);
+  border-bottom: 1px solid var(--amber-m);
+  font-size: 11px;
+  color: var(--amber);
+}
+.missing-alert.show { display: flex; }
+.missing-alert svg { width: 12px; height: 12px; flex-shrink: 0; }
+
+.rsec textarea {
+  width: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: 'Geist', sans-serif;
+  font-size: 12.5px;
+  color: var(--g2);
+  line-height: 1.7;
+  padding: 11px 14px;
+  background: transparent;
+  min-height: 80px;
+}
+
+.result-actions { display: none; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+.result-actions.show { display: flex; }
+
+/* ── RECETA ── */
+.rx-wrap { max-width: 520px; display: flex; flex-direction: column; gap: 10px; }
+.rx-card { background: var(--white); border: 1px solid var(--g6); border-radius: var(--r); overflow: hidden; }
+.rx-head { padding: 10px 16px; border-bottom: 1px solid var(--g6); display: flex; align-items: center; justify-content: space-between; }
+.rx-title { font-size: 12px; font-weight: 500; color: var(--g); }
+.rx-ct { font-size: 11px; color: var(--g4); }
+.rx-row { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--g7); transition: background .1s; }
+.rx-row:last-child { border-bottom: none; }
+.rx-row:hover { background: var(--g8); }
+.rx-row input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--teal); cursor: pointer; flex-shrink: 0; }
+.rx-info { flex: 1; }
+.rx-drug { font-size: 13px; font-weight: 500; }
+.rx-dose { font-size: 11px; color: var(--g3); font-family: 'Geist Mono', monospace; margin-top: 1px; }
+.rx-st { font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 500; }
+.st-same { background: var(--teal-l); color: var(--teal-d); }
+.st-mod { background: var(--amber-l); color: var(--amber); }
+.add-btn { width: 100%; border: 1px dashed var(--g5); background: transparent; border-radius: var(--r); padding: 9px; font-family: inherit; font-size: 12px; color: var(--g4); cursor: pointer; transition: all .13s; }
+.add-btn:hover { border-color: var(--g3); color: var(--g3); background: var(--white); }
+.print-bar { background: var(--g); border-radius: var(--r); padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; }
+.print-info .pt { font-size: 13px; font-weight: 500; color: #fff; margin-bottom: 2px; }
+.print-info .ps { font-size: 11px; color: var(--g4); }
+.print-btns { display: flex; gap: 8px; }
+
+/* BUTTONS */
+.btn { border: none; border-radius: 6px; font-family: inherit; font-size: 12px; font-weight: 500; cursor: pointer; padding: 8px 16px; transition: all .13s; display: flex; align-items: center; gap: 5px; }
+.btn:active { transform: scale(.97); }
+.btn-ghost { background: transparent; border: 1px solid var(--g6); color: var(--g3); }
+.btn-ghost:hover { border-color: var(--g4); color: var(--g2); }
+.btn-teal { background: var(--teal); color: #fff; }
+.btn-teal:hover { background: var(--teal-d); }
+.btn-dark-inv { background: #fff; color: var(--g); border: 1px solid rgba(255,255,255,.2); }
+.btn-inv { background: var(--teal); color: #fff; }
+
+/* BOTTOM BAR */
+.btmbar { background: var(--white); border-top: 1px solid var(--g6); height: 48px; display: flex; align-items: center; padding: 0 20px; flex-shrink: 0; gap: 10px; }
+.btm-sig { font-size: 11px; color: var(--g4); }
+.btm-sig strong { color: var(--g2); }
+.btm-actions { margin-left: auto; display: flex; gap: 8px; }
+
+/* Toast */
+.toast { position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%) translateY(8px); background: var(--g); color: #fff; border-radius: 20px; padding: 7px 16px; font-size: 12px; font-weight: 500; opacity: 0; pointer-events: none; transition: all .22s; white-space: nowrap; z-index: 999; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Completed banner */
+.completed-banner {
+  display: none;
+  background: var(--teal-l);
+  border: 1px solid var(--teal-m);
+  border-radius: var(--r);
+  padding: 12px 16px;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--teal-d);
+  font-weight: 500;
+  animation: slide-in .3s ease-out;
+}
+.completed-banner.show { display: flex; }
+@keyframes slide-in { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+.completed-banner svg { width: 20px; height: 20px; flex-shrink: 0; }
+.completed-banner .cb-actions { margin-left: auto; display: flex; gap: 6px; }
+
+/* Visual refresh */
+:root {
+  --g:#f6fbff; --g2:#dce6f2; --g3:#a8b5c9; --g4:#74829b; --g5:#384258;
+  --g6:#1d2636; --g7:#050913; --g8:#0c1422; --white:#0f1726;
+  --teal:#7debd1; --teal-l:#102c28; --teal-m:#1d7460; --teal-d:#bbfff0;
+  --red:#ff8278; --red-l:#341717; --red-m:#7b302c;
+  --amber:#f6bf67; --amber-l:#34250f; --amber-m:#7d5c27;
+  --r:16px;
+  --line:rgba(160,178,204,.16);
+  --panel-bg:linear-gradient(180deg,rgba(18,28,46,.96) 0%,rgba(8,13,24,.98) 100%);
+  --panel-alt:linear-gradient(180deg,rgba(23,35,58,.92) 0%,rgba(10,15,27,.98) 100%);
+  --dark-btn:linear-gradient(180deg,#202b3f 0%,#151d2e 58%,#0b111b 100%);
+  --teal-btn:linear-gradient(180deg,#9bf5e0 0%,#44d3b4 56%,#158264 100%);
+  --red-btn:linear-gradient(180deg,#ff978f 0%,#da6054 58%,#8f271f 100%);
+  --silver-btn:linear-gradient(180deg,#fefefe 0%,#dfe7f1 58%,#b2bfd0 100%);
+  --panel-shadow:0 26px 70px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.05);
+  --btn-shadow:0 16px 28px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 18px rgba(0,0,0,.28);
+}
+
+body {
+  background:
+    radial-gradient(1200px 780px at 88% -10%, rgba(125,235,209,.16), transparent 58%),
+    radial-gradient(760px 560px at -8% 105%, rgba(100,145,255,.12), transparent 55%),
+    linear-gradient(180deg, #08101c 0%, #04070f 100%);
+  position: relative;
+  isolation: isolate;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(255,255,255,.03), transparent 18%, transparent 80%, rgba(255,255,255,.015));
+}
+
+header, .tabs, .btmbar {
+  background: rgba(8,13,24,.78);
+  border-color: var(--line);
+  backdrop-filter: blur(18px);
+}
+header {
+  box-shadow: 0 1px 0 rgba(255,255,255,.04), 0 18px 32px rgba(0,0,0,.28);
+  height: 58px;
+}
+.logo { letter-spacing: -.6px; }
+.logo-pulse { box-shadow: 0 0 0 6px rgba(125,235,209,.12), 0 0 24px rgba(125,235,209,.38); }
+.tabs {
+  padding: 12px 16px;
+  gap: 10px;
+}
+.tab {
+  margin-bottom: 0;
+  padding: 11px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--dark-btn);
+  color: var(--g2);
+  box-shadow: var(--btn-shadow);
+}
+.tab:hover {
+  color: var(--g);
+  transform: translateY(-1px);
+}
+.tab.active {
+  background: linear-gradient(180deg,#f4f8ff 0%,#bcc9dc 100%);
+  color: #0a1220;
+  border-color: rgba(255,255,255,.4);
+  box-shadow: 0 18px 28px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.45), inset 0 -10px 18px rgba(116,132,157,.28);
+}
+.tab-n {
+  background: rgba(11,18,32,.14);
+  color: inherit;
+}
+
+.fsec, .api-sec, .check-card, .approve-card, .mic-zone, .rsec, .rx-card, .ctx-pill,
+.das-result, .print-card, .screens > .screen > div[style*="background:var(--white)"], #transcriptBox, .cie10-list, .completed-banner {
+  background: var(--panel-bg) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: var(--panel-shadow);
+  backdrop-filter: blur(18px);
+}
+.fsec-head, .check-head, .rx-head, .rsec-head, .api-head {
+  background: linear-gradient(180deg, rgba(28,40,63,.9), rgba(14,20,33,.95));
+  border-bottom-color: rgba(255,255,255,.05);
+}
+.screen { padding: 24px; }
+
+.patient-tag, .consult-timer, .ctx-pill, .diag-chip, .fmt-tag, .chip {
+  border: 1px solid var(--line);
+  box-shadow: var(--btn-shadow);
+}
+.patient-tag, .consult-timer, .ctx-pill, .chip {
+  background: var(--dark-btn);
+}
+.consult-timer.running {
+  background: linear-gradient(180deg,#4f2020 0%,#301415 58%,#1a0b0c 100%);
+}
+.fmt-tag {
+  background: rgba(255,255,255,.05);
+  color: var(--g2);
+}
+.chip.on, .diag-chip {
+  background: linear-gradient(180deg, rgba(20,76,64,.95), rgba(13,41,38,.95));
+}
+
+input:not([type="checkbox"]):not([type="radio"]), select, textarea {
+  background: linear-gradient(180deg, rgba(8,13,24,.92), rgba(10,16,29,.98)) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 12px !important;
+  color: var(--g) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), inset 0 -12px 18px rgba(0,0,0,.26);
+}
+input:focus, select:focus, textarea:focus {
+  border-color: rgba(125,235,209,.42) !important;
+  background: linear-gradient(180deg, rgba(12,19,33,.98), rgba(8,13,24,.98)) !important;
+}
+
+.fmt-card, .btn, .btn-draft, .btn-approve, .add-btn {
+  border-radius: 12px !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: var(--btn-shadow);
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease, background .15s ease;
+}
+.fmt-card, .btn-ghost, .btn-draft, .add-btn {
+  background: var(--dark-btn) !important;
+  color: var(--g2) !important;
+}
+.fmt-card:hover, .btn:hover, .btn-draft:hover, .btn-approve:hover, .add-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+}
+.fmt-card.selected {
+  background: linear-gradient(180deg,#f4f8ff 0%,#bcc9dc 100%) !important;
+  color: #0a1220;
+  border-color: rgba(255,255,255,.4) !important;
+  box-shadow: 0 18px 28px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.45), inset 0 -10px 18px rgba(116,132,157,.28);
+}
+.fmt-card.selected .fmt-name,
+.fmt-card.selected .fmt-desc,
+.fmt-card.selected .fmt-tag {
+  color: #0a1220 !important;
+}
+.fmt-card.selected .fmt-tag {
+  background: rgba(10,18,32,.1);
+}
+
+.btn:active, .btn-draft:active, .btn-approve:active, .add-btn:active {
+  transform: translateY(2px) scale(.98);
+  box-shadow: 0 8px 14px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.1), inset 0 -6px 12px rgba(0,0,0,.2);
+}
+.btn-teal, .btn-approve.ready, .btn-approve.approved, .btn-inv,
+button[style*="background:var(--teal)"],
+button[style*="background: var(--teal)"] {
+  background: var(--teal-btn) !important;
+  color: #04120d !important;
+  border-color: rgba(173,255,237,.38) !important;
+  text-shadow: 0 1px 0 rgba(255,255,255,.22);
+}
+.btn-dark-inv {
+  background: var(--silver-btn) !important;
+  color: #0b1220 !important;
+  border-color: rgba(255,255,255,.45) !important;
+}
+.btn-ghost, .btn-draft, .add-btn {
+  color: var(--g2) !important;
+}
+
+.mic-zone { padding: 30px 24px; }
+.mic-btn {
+  width: 82px;
+  height: 82px;
+  background: radial-gradient(circle at 30% 28%, #263752 0%, #121c2c 58%, #080d15 100%);
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 24px 34px rgba(0,0,0,.42), inset 0 2px 6px rgba(255,255,255,.08), inset 0 -14px 20px rgba(0,0,0,.4);
+}
+.mic-btn:hover {
+  background: radial-gradient(circle at 30% 28%, #315073 0%, #16263c 58%, #09111b 100%);
+  border-color: rgba(125,235,209,.3);
+}
+.mic-btn.recording {
+  background: radial-gradient(circle at 30% 28%, #6c2b2a 0%, #391718 56%, #1a0a0a 100%);
+  border-color: rgba(255,180,173,.35);
+  box-shadow: 0 24px 34px rgba(0,0,0,.42), inset 0 2px 6px rgba(255,255,255,.06), inset 0 -14px 20px rgba(0,0,0,.42);
+}
+
+.check-item, .rx-row {
+  border-bottom-color: rgba(255,255,255,.05);
+}
+.print-bar {
+  background: linear-gradient(135deg, rgba(24,34,55,.96) 0%, rgba(13,19,33,.98) 55%, rgba(8,13,24,.99) 100%);
+  border: 1px solid var(--line);
+  box-shadow: var(--panel-shadow), inset 0 1px 0 rgba(255,255,255,.04);
+}
+.print-info .pt {
+  color: var(--g);
+}
+.print-info .ps {
+  color: var(--g3);
+}
+.approve-progress, .das-track {
+  background: rgba(255,255,255,.06);
+}
+.approve-fill {
+  background: linear-gradient(90deg, #44d3b4 0%, #8ef2dd 100%);
+  box-shadow: 0 0 18px rgba(68,211,180,.35);
+}
+.das-track-fill {
+  background: linear-gradient(90deg, #44d3b4 0%, #f6bf67 55%, #ff8278 100%);
+}
+
+#apiError {
+  background: linear-gradient(180deg, rgba(64,24,24,.95), rgba(38,13,14,.98)) !important;
+  border: 1px solid rgba(255,130,120,.26) !important;
+  box-shadow: var(--panel-shadow);
+}
+
+.btmbar {
+  height: 58px;
+  box-shadow: 0 -18px 40px rgba(0,0,0,.34);
+}
+.toast {
+  background: linear-gradient(180deg, #f4f8ff 0%, #c0cddd 100%);
+  color: #09111d;
+  box-shadow: 0 18px 32px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.45);
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo"><div class="logo-pulse"></div>DrNoteAI</div>
+
+  <div class="patient-tag">
+    <div class="av" id="ptAv">MG</div>
+    <span id="ptName">María Elena Gutiérrez</span>
+    <span style="color:var(--g5)">·</span>
+    <span style="color:var(--g4)" id="ptMeta">F 54a · AR</span>
+  </div>
+
+  <!-- Consult timer -->
+  <div class="consult-timer" id="consultTimer" onclick="toggleConsultTimer()" title="Click para iniciar/pausar timer de consulta">
+    <div class="ct-dot"></div>
+    <div class="ct-time" id="ctTime">0:00</div>
+    <div class="ct-label" id="ctLabel">Iniciar consulta</div>
+  </div>
+
+  <div class="hright">
+    <!-- Completion flag -->
+    <div class="completion-flag" id="completionFlag">
+      <span class="flag-pct" id="flagPct">0%</span>
+      completado
+    </div>
+    Dr. L. Montoya · <span id="clk">--:--</span>
+  </div>
+</header>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="go(0)"><div class="tab-n">1</div>Datos del paciente</button>
+  <button class="tab" onclick="go(1)"><div class="tab-n">2</div>Dictado</button>
+  <button class="tab" onclick="go(2)"><div class="tab-n">3</div>Receta e impresión</button>
+</div>
+
+<div class="screens">
+
+<!-- ══ SCREEN 1: DATOS ══ -->
+<div class="screen active" id="s0">
+<div class="form-wrap">
+
+  <div class="fsec">
+    <div class="fsec-head" onclick="toggleSec(this)">
+      <span class="fsec-title">Datos generales</span>
+      <span class="fsec-badge" id="badge-gen">Requerido</span>
+      <span class="fsec-arrow open">›</span>
+    </div>
+    <div class="fsec-body">
+      <div class="fg2">
+        <div class="fl fspan2"><label>Nombre completo</label><input type="text" id="f-nombre" value="María Elena Gutiérrez" oninput="syncHeader();updateCompletion()"></div>
+        <div class="fl"><label>Fecha de nacimiento</label><input type="date" id="f-fnac" value="1971-03-15" onchange="updateCompletion()"></div>
+        <div class="fl"><label>Sexo</label><select id="f-sexo" onchange="updateCompletion()"><option value="F" selected>Femenino</option><option value="M">Masculino</option></select></div>
+        <div class="fl"><label>N° de expediente</label><input type="text" id="f-exp" class="mono" value="0042" oninput="updateCompletion()"></div>
+        <div class="fl"><label>Tipo de visita</label><select id="f-visita" onchange="updateCompletion()"><option value="control" selected>Control</option><option value="primera">Primera visita</option><option value="flare">Reagudización</option><option value="procedimiento">Procedimiento</option></select></div>
+        <div class="fl fspan2" style="position:relative"><label>Diagnóstico principal <span style="color:var(--g4);text-transform:none;letter-spacing:0">(CIE-10)</span></label><input type="text" id="f-diag" value="Artritis Reumatoide (M05.9)" autocomplete="off" oninput="cie10Suggest(this,'cie10-list-1');updateCompletion()" onfocus="cie10Suggest(this,'cie10-list-1')" onblur="setTimeout(()=>document.getElementById('cie10-list-1').style.display='none',200)"><div id="cie10-list-1" class="cie10-list"></div></div>
+        <div class="fl fspan2" style="position:relative"><label>Diagnósticos secundarios <span style="color:var(--g4);text-transform:none;letter-spacing:0">(CIE-10)</span></label><input type="text" id="f-diag2" placeholder="Ej: HTA, DM2, Osteoporosis..." autocomplete="off" oninput="cie10Suggest(this,'cie10-list-2')" onfocus="cie10Suggest(this,'cie10-list-2')" onblur="setTimeout(()=>document.getElementById('cie10-list-2').style.display='none',200)"><div id="cie10-list-2" class="cie10-list"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fsec">
+    <div class="fsec-head" onclick="toggleSec(this)"><span class="fsec-title">Antecedentes</span><span class="fsec-badge">Opcional</span><span class="fsec-arrow">›</span></div>
+    <div class="fsec-body closed">
+      <p class="sec-micro">Antecedentes patológicos</p>
+      <div class="chips"><div class="chip" onclick="toggleChip(this)">HTA</div><div class="chip" onclick="toggleChip(this)">DM2</div><div class="chip" onclick="toggleChip(this)">Dislipidemia</div><div class="chip" onclick="toggleChip(this)">Osteoporosis</div><div class="chip" onclick="toggleChip(this)">Hipotiroidismo</div><div class="chip" onclick="toggleChip(this)">Depresión</div><div class="chip" onclick="toggleChip(this)">Asma</div><div class="chip" onclick="toggleChip(this)">Fibromialgia</div></div>
+      <div class="fl"><label>Otros / Cirugías</label><textarea rows="2" id="f-app" placeholder="Colecistectomía 2018..."></textarea></div>
+      <p class="sec-micro">Antecedentes familiares</p>
+      <div class="chips"><div class="chip" onclick="toggleChip(this)">AR familiar</div><div class="chip" onclick="toggleChip(this)">LES familiar</div><div class="chip" onclick="toggleChip(this)">Espondiloartritis</div><div class="chip" onclick="toggleChip(this)">Gota</div><div class="chip" onclick="toggleChip(this)">Psoriasis</div></div>
+      <p class="sec-micro">Hábitos y alergias</p>
+      <div class="fg2">
+        <div class="fl"><label>Tabaco</label><select id="f-tabaco"><option value="">—</option><option value="no">No fumador</option><option value="ex">Ex-fumador</option><option value="si">Fumador activo</option></select></div>
+        <div class="fl"><label>Alergias</label><input type="text" id="f-alergias" placeholder="AINE, penicilina..."></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fsec">
+    <div class="fsec-head" onclick="toggleSec(this)"><span class="fsec-title">Signos vitales</span><span class="fsec-badge">Opcional</span><span class="fsec-arrow">›</span></div>
+    <div class="fsec-body closed">
+      <div class="fg4">
+        <div class="fl"><label>PA sistólica</label><div class="unit"><input type="number" id="f-pas" class="mono" placeholder="128" oninput="updateCompletion()"><span>mmHg</span></div></div>
+        <div class="fl"><label>PA diastólica</label><div class="unit"><input type="number" id="f-pad" class="mono" placeholder="82"><span>mmHg</span></div></div>
+        <div class="fl"><label>FC</label><div class="unit"><input type="number" id="f-fc" class="mono" placeholder="74"><span>lpm</span></div></div>
+        <div class="fl"><label>Temperatura</label><div class="unit"><input type="number" id="f-temp" class="mono" placeholder="36.4" step="0.1"><span>°C</span></div></div>
+        <div class="fl"><label>Peso</label><div class="unit"><input type="number" id="f-peso" class="mono" placeholder="68" step="0.1" oninput="calcIMC()"><span>kg</span></div></div>
+        <div class="fl"><label>Talla</label><div class="unit"><input type="number" id="f-talla" class="mono" placeholder="162" oninput="calcIMC()"><span>cm</span></div></div>
+        <div class="fl"><label>IMC</label><div class="unit"><input type="number" id="f-imc" class="mono" readonly><span>kg/m²</span></div></div>
+        <div class="fl"><label>SatO₂</label><div class="unit"><input type="number" id="f-sat" class="mono" placeholder="98"><span>%</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fsec">
+    <div class="fsec-head" onclick="toggleSec(this)"><span class="fsec-title">Laboratorios</span><span class="fsec-badge">Opcional</span><span class="fsec-arrow">›</span></div>
+    <div class="fsec-body closed">
+      <p class="sec-micro">Hematología</p>
+      <div class="fg4">
+        <div class="fl"><label>Hb</label><div class="unit"><input type="number" id="l-hb" class="mono" placeholder="11.8" step="0.1" oninput="updateCompletion()"><span>g/dL</span></div></div>
+        <div class="fl"><label>Leucocitos</label><div class="unit"><input type="number" id="l-leuco" class="mono" placeholder="7200"><span>/µL</span></div></div>
+        <div class="fl"><label>Plaquetas</label><div class="unit"><input type="number" id="l-plaq" class="mono" placeholder="310"><span>×10³</span></div></div>
+        <div class="fl"><label>Neutrófilos</label><div class="unit"><input type="number" id="l-neutro" class="mono" placeholder="65"><span>%</span></div></div>
+      </div>
+      <p class="sec-micro">Inflamación</p>
+      <div class="fg4">
+        <div class="fl"><label>PCR</label><div class="unit"><input type="number" id="l-pcr" class="mono" placeholder="12" oninput="calcDas28();updateCompletion()"><span>mg/L</span></div></div>
+        <div class="fl"><label>VSG</label><div class="unit"><input type="number" id="l-vsg" class="mono" placeholder="28" oninput="updateCompletion()"><span>mm/h</span></div></div>
+        <div class="fl"><label>Ferritina</label><div class="unit"><input type="number" id="l-ferr" class="mono" placeholder=""><span>ng/mL</span></div></div>
+        <div class="fl"><label>Fibrinógeno</label><div class="unit"><input type="number" id="l-fibr" class="mono" placeholder=""><span>mg/dL</span></div></div>
+      </div>
+      <p class="sec-micro">Función renal/hepática</p>
+      <div class="fg4">
+        <div class="fl"><label>Creatinina</label><div class="unit"><input type="number" id="l-creat" class="mono" placeholder="0.9" step="0.01" oninput="updateCompletion()"><span>mg/dL</span></div></div>
+        <div class="fl"><label>TGO</label><div class="unit"><input type="number" id="l-tgo" class="mono" placeholder="22"><span>U/L</span></div></div>
+        <div class="fl"><label>TGP</label><div class="unit"><input type="number" id="l-tgp" class="mono" placeholder="18"><span>U/L</span></div></div>
+        <div class="fl"><label>Ácido úrico</label><div class="unit"><input type="number" id="l-au" class="mono" placeholder=""><span>mg/dL</span></div></div>
+      </div>
+      <p class="sec-micro">Serologías reumatológicas</p>
+      <div class="fg4">
+        <div class="fl"><label>FR</label><div class="unit"><input type="number" id="l-fr" class="mono" placeholder="148"><span>UI/mL</span></div></div>
+        <div class="fl"><label>Anti-CCP</label><div class="unit"><input type="number" id="l-anticcp" class="mono" placeholder="220"><span>U/mL</span></div></div>
+        <div class="fl"><label>ANA</label><input type="text" id="l-ana" class="mono" placeholder="Neg / 1:80"></div>
+        <div class="fl"><label>Anti-DNA</label><input type="text" id="l-dna" class="mono" placeholder="Neg"></div>
+      </div>
+      <p class="sec-micro">Fecha de laboratorios</p>
+      <div class="fg2">
+        <div class="fl"><label>Fecha de toma</label><input type="date" id="l-fecha" oninput="updateCompletion()"></div>
+        <div class="fl"><label>Laboratorio</label><input type="text" id="l-lab" placeholder="Nombre del laboratorio"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ══ SCREEN 2: DICTADO ══ -->
+<div class="screen" id="s1">
+<div class="dictado-layout">
+
+  <!-- MAIN -->
+  <div class="dictado-main">
+
+    <!-- Completed banner -->
+    <div class="completed-banner" id="completedBanner">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l5 5 9-9"/></svg>
+      <div>
+        <div>Nota aprobada y guardada</div>
+        <div style="font-size:11px;font-weight:400;opacity:.7">Lista para imprimir o exportar</div>
+      </div>
+      <div class="cb-actions">
+        <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="go(2)">Ir a receta →</button>
+        <button class="btn btn-teal" style="font-size:11px;padding:5px 10px" onclick="window.print()">Imprimir</button>
+      </div>
+    </div>
+
+    <div class="ctx-pill">
+      <div class="ctx-dot"></div>
+      <strong id="ctx-name" style="color:var(--g2)">María Elena Gutiérrez</strong>
+      &nbsp;·&nbsp;<span id="ctx-diag" style="color:var(--g3)">AR · Control</span>
+    </div>
+
+    <div class="api-ok-badge" id="apiOkBadge">✓ API conectada</div>
+
+    <!-- API Key -->
+    <div class="api-sec" id="apiSec">
+      <div class="api-head" onclick="toggleApi()">
+        <span style="font-weight:500;color:var(--g2);font-size:12px">⚙ Configuración API</span>
+        <span style="color:var(--g4);font-size:11px" id="apiStatus">No configurada — usando demo</span>
+      </div>
+      <div class="api-body" id="apiBody">
+        <div class="fl">
+          <label>API Key de Google Gemini (gratuita)</label>
+          <input type="password" id="apiKeyInput" placeholder="AIzaSy..." style="font-family:'Geist Mono',monospace;font-size:12px" oninput="checkApiKey()">
+        </div>
+        <div style="font-size:11px;color:var(--g4);margin-top:6px;line-height:1.5">Obtén tu key gratis en <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--teal);text-decoration:none">aistudio.google.com/app/apikey</a>. La key no se guarda en ningún servidor, solo vive en esta sesión.</div>
+      </div>
+    </div>
+
+    <!-- Format selector -->
+    <div>
+      <div style="font-size:10px;font-weight:600;letter-spacing:.07em;color:var(--g4);text-transform:uppercase;margin-bottom:8px">Formato de nota</div>
+      <div class="fmt-grid" id="fmtGrid">
+        <div class="fmt-card selected" onclick="selectFmt(this,'control')"><div class="fmt-name">Nota de control</div><div class="fmt-desc">Seguimiento crónico</div><div class="fmt-sections"><span class="fmt-tag">Evolución</span><span class="fmt-tag">EF</span><span class="fmt-tag">Labs</span><span class="fmt-tag">Plan</span></div></div>
+        <div class="fmt-card" onclick="selectFmt(this,'soap')"><div class="fmt-name">SOAP</div><div class="fmt-desc">Formato estructurado</div><div class="fmt-sections"><span class="fmt-tag">S</span><span class="fmt-tag">O</span><span class="fmt-tag">A</span><span class="fmt-tag">P</span></div></div>
+        <div class="fmt-card" onclick="selectFmt(this,'hc')"><div class="fmt-name">Historia clínica</div><div class="fmt-desc">Primera visita completa</div><div class="fmt-sections"><span class="fmt-tag">Anamnesis</span><span class="fmt-tag">Antec</span><span class="fmt-tag">EF</span><span class="fmt-tag">Dx</span></div></div>
+        <div class="fmt-card" onclick="selectFmt(this,'eco')"><div class="fmt-name">Procedimiento</div><div class="fmt-desc">Ecografía MSK</div><div class="fmt-sections"><span class="fmt-tag">Indicación</span><span class="fmt-tag">Hallazgos</span><span class="fmt-tag">Conclusión</span></div></div>
+        <div class="fmt-card" onclick="selectFmt(this,'interconsulta')"><div class="fmt-name">Interconsulta</div><div class="fmt-desc">Carta de derivación</div><div class="fmt-sections"><span class="fmt-tag">Motivo</span><span class="fmt-tag">Resumen</span><span class="fmt-tag">Solicitud</span></div></div>
+        <div class="fmt-card" onclick="selectFmt(this,'libre')"><div class="fmt-name">Libre</div><div class="fmt-desc">Sin estructura</div><div class="fmt-sections"><span class="fmt-tag">Texto libre</span></div></div>
+      </div>
+    </div>
+
+    <!-- Mic -->
+    <div class="mic-zone">
+      <button class="mic-btn idle" id="micBtn" onclick="toggleRec()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3M9 22h6"/></svg>
+      </button>
+      <div class="waveform" id="wave"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="mic-label" id="micLbl">Toca para dictar</div>
+      <div class="rec-timer" id="rtimer">0:00</div>
+    </div>
+
+    <!-- Import desde móvil -->
+    <div style="background:var(--white);border:1px solid var(--g6);border-radius:var(--r);padding:10px 12px;margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-size:11px;color:var(--g4);font-weight:500">📱 Importar desde móvil:</span>
+      <input id="importCode" placeholder="Pega código/URL generado en el móvil" style="flex:1;min-width:240px;background:var(--g8);border:1px solid var(--g6);border-radius:6px;padding:7px 10px;color:var(--g);font-family:'Geist Mono',monospace;font-size:11px;outline:none">
+      <button onclick="importFromMobile()" style="background:var(--teal);border:none;color:#0a0a0a;font-size:11px;font-weight:600;padding:7px 14px;border-radius:6px;cursor:pointer;font-family:inherit">Cargar</button>
+    </div>
+
+    <!-- Transcript live view + manual input -->
+    <div id="transcriptBox" style="background:var(--white);border:1px solid var(--g6);border-radius:var(--r);padding:12px;margin-top:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--g4);text-transform:uppercase">Transcripción capturada</div>
+        <button onclick="clearTranscript()" style="background:none;border:1px solid var(--g6);color:var(--g3);font-size:10px;padding:3px 8px;border-radius:6px;cursor:pointer;font-family:inherit">Limpiar</button>
+      </div>
+      <textarea id="transcriptArea" placeholder="El dictado aparecerá aquí. También puedes escribir o pegar texto manualmente (ej: mezcla de paciente y médico)..." style="width:100%;min-height:90px;background:var(--g8);border:1px solid var(--g6);border-radius:8px;padding:10px;color:var(--g);font-family:inherit;font-size:13px;line-height:1.5;resize:vertical" oninput="liveTranscript=this.value"></textarea>
+      <div id="srStatus" style="font-size:10px;color:var(--g4);margin-top:6px"></div>
+    </div>
+
+    <!-- Processing -->
+    <div class="processing" id="proc">
+      <div class="spin"></div>
+      Generando <strong id="procFmt">nota de control</strong> con IA...
+    </div>
+    <div id="apiError" style="display:none;background:var(--red-l);border:1px solid var(--red-m);color:var(--red);padding:10px 14px;border-radius:var(--r);font-size:12px;margin-top:10px"></div>
+
+    <!-- Result sections -->
+    <div class="result-wrap" id="resultWrap"></div>
+
+    <div class="result-actions" id="resultActs">
+      <button class="btn btn-ghost" onclick="resetDictado()">Volver a dictar</button>
+    </div>
+
+  </div>
+
+  <!-- SIDEBAR CHECKLIST -->
+  <div class="sidebar-check">
+    <div class="sidebar-title">Checklist de aprobación</div>
+
+    <!-- Progress card -->
+    <div class="approve-card">
+      <div style="font-size:12px;font-weight:500;color:var(--g2)">Completitud</div>
+      <div class="approve-progress"><div class="approve-fill" id="approveFill"></div></div>
+      <div class="approve-pct"><span id="approveItems">0 de 0 secciones</span><strong id="approvePct">0%</strong></div>
+      <div class="draft-row">
+        <button class="btn-draft" id="btnDraft" onclick="saveDraft()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Guardar borrador
+        </button>
+        <button class="btn-draft" onclick="printDraft()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Imprimir
+        </button>
+      </div>
+      <button class="btn-approve" id="btnApprove" onclick="approveFinal()">Aprobar nota</button>
+    </div>
+
+    <!-- Section checklist -->
+    <div class="check-card" id="checkList">
+      <div class="check-head">Secciones</div>
+      <div id="checkItems">
+        <div class="check-item" style="color:var(--g4);font-style:italic;font-size:11px;padding:12px">
+          Genera una nota para ver el checklist
+        </div>
+      </div>
+    </div>
+
+    <!-- Metrics card -->
+    <div class="check-card">
+      <div class="check-head">Métricas de consulta</div>
+      <div class="check-item" style="flex-direction:column;align-items:flex-start;gap:2px">
+        <div style="font-size:10px;color:var(--g4)">Duración consulta</div>
+        <div style="font-size:14px;font-family:'Geist Mono',monospace;font-weight:500" id="metricDuration">—</div>
+      </div>
+      <div class="check-item" style="flex-direction:column;align-items:flex-start;gap:2px">
+        <div style="font-size:10px;color:var(--g4)">Tiempo de dictado</div>
+        <div style="font-size:14px;font-family:'Geist Mono',monospace;font-weight:500" id="metricDictado">—</div>
+      </div>
+      <div class="check-item" style="flex-direction:column;align-items:flex-start;gap:2px">
+        <div style="font-size:10px;color:var(--g4)">Formato generado</div>
+        <div style="font-size:12px;font-weight:500;color:var(--g2)" id="metricFmt">—</div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</div>
+
+<!-- ══ SCREEN 3: RECETA ══ -->
+<div class="screen" id="s2">
+<div class="rx-wrap">
+  <div class="rx-card">
+    <div class="rx-head"><span class="rx-title">Renovación de receta</span><span class="rx-ct">3 medicamentos</span></div>
+    <div class="rx-row"><input type="checkbox" class="rx-check" checked><div class="rx-info"><div class="rx-drug">Metotrexate</div><div class="rx-dose">15 mg — 1× semana (lunes)</div></div><span class="rx-st st-same">Sin cambio</span></div>
+    <div class="rx-row"><input type="checkbox" class="rx-check" checked><div class="rx-info"><div class="rx-drug">Ácido fólico</div><div class="rx-dose">5 mg — 1× semana (jueves)</div></div><span class="rx-st st-same">Sin cambio</span></div>
+    <div class="rx-row"><input type="checkbox" class="rx-check" checked><div class="rx-info"><div class="rx-drug">Naproxeno</div><div class="rx-dose">500 mg — c/12h PRN</div></div><span class="rx-st st-mod">PRN añadido</span></div>
+  </div>
+  <button class="add-btn">+ Agregar medicamento</button>
+  <div class="print-bar">
+    <div class="print-info"><div class="pt">Listo para imprimir</div><div class="ps">Nota clínica · Receta · Indicaciones</div></div>
+    <div class="print-btns">
+      <button class="btn btn-dark-inv" onclick="window.print()">Solo receta</button>
+      <button class="btn btn-inv" onclick="window.print()">Imprimir todo</button>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="btmbar">
+  <div class="btm-sig">Dr. <strong>L. Montoya</strong> · <span id="clkB">--:--</span></div>
+  <div class="btm-actions">
+    <button class="btn btn-ghost">Nueva consulta</button>
+    <button class="btn btn-teal" onclick="go(1);syncCtx()">Ir a dictar →</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── TABS ──
+const tabs = document.querySelectorAll('.tab');
+const screens = document.querySelectorAll('.screen');
+function go(i){ tabs.forEach((t,x)=>t.classList.toggle('active',x===i)); screens.forEach((s,x)=>s.classList.toggle('active',x===i)); if(i===1)syncCtx(); }
+
+// ── COLLAPSIBLES ──
+function toggleSec(head){ const b=head.nextElementSibling,a=head.querySelector('.fsec-arrow'); b.classList.toggle('closed'); a.classList.toggle('open',!b.classList.contains('closed')); }
+const firstFsecBody=document.querySelector('.fsec-body');
+if(firstFsecBody) firstFsecBody.classList.remove('closed');
+
+// ── CHIPS ──
+function toggleChip(el){ el.classList.toggle('on'); }
+
+// ── CLOCK ──
+function tick(){ const t=new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'}); document.getElementById('clk').textContent=t; document.getElementById('clkB').textContent=t; }
+tick(); setInterval(tick,15000);
+
+// ── IMC ──
+function calcIMC(){ const p=parseFloat(document.getElementById('f-peso').value),t=parseFloat(document.getElementById('f-talla').value)/100; if(p&&t) document.getElementById('f-imc').value=(p/(t*t)).toFixed(1); }
+
+// ── DAS28 ──
+function calcDas28(){
+  const t28=parseFloat(document.getElementById('d-tender').value)||0;
+  const s28=parseFloat(document.getElementById('d-swollen').value)||0;
+  const vas=parseFloat(document.getElementById('d-vas').value)||0;
+  const pcr=parseFloat(document.getElementById('d-pcr').value)||0;
+  if(!t28&&!s28) return;
+  const score=0.56*Math.sqrt(t28)+0.28*Math.sqrt(s28)+0.36*Math.log(pcr+1)+0.014*vas+0.96;
+  const v=score.toFixed(2);
+  const el=document.getElementById('das-val'); const act=document.getElementById('das-act');
+  el.textContent=v;
+  const pct=Math.min(Math.max((score-1.5)/(8-1.5)*100,0),100).toFixed(1);
+  document.getElementById('das-pin').style.left=pct+'%';
+  let label,cls;
+  if(score<2.6){label='Remisión';cls='remision';}else if(score<=3.2){label='Baja';cls='baja';}else if(score<=5.1){label='Moderada';cls='moderada';}else{label='Alta';cls='alta';}
+  act.textContent=label; el.className='das-number '+cls;
+  document.getElementById('das-badge').textContent='DAS28: '+v;
+}
+
+// ── SYNC HEADER ──
+function syncHeader(){
+  const n=document.getElementById('f-nombre').value||'Paciente';
+  const w=n.trim().split(' ');
+  document.getElementById('ptAv').textContent=(w[0][0]+(w[1]?w[1][0]:'')).toUpperCase().substring(0,2);
+  document.getElementById('ptName').textContent=n;
+}
+
+function syncCtx(){
+  const n=document.getElementById('f-nombre').value||'Paciente';
+  const d=document.getElementById('f-diag').value||'—';
+  const v=document.getElementById('f-visita');
+  document.getElementById('ctx-name').textContent=n;
+  document.getElementById('ctx-diag').textContent=d.split('(')[0].trim()+' · '+v.options[v.selectedIndex].text;
+}
+
+// ── COMPLETION SCORE (datos) ──
+function updateCompletion(){
+  const hasValue=id=>{ const el=document.getElementById(id); return !!(el && el.value); };
+  const checks=[
+    hasValue('f-nombre'),
+    hasValue('f-diag'),
+    hasValue('f-fnac'),
+    hasValue('f-pas'),
+    hasValue('l-pcr'),
+    hasValue('l-vsg'),
+    hasValue('l-hb'),
+    hasValue('l-creat'),
+    hasValue('l-fecha')
+  ];
+  const done=checks.filter(Boolean).length;
+  const pct=Math.round(done/checks.length*100);
+  const flag=document.getElementById('completionFlag');
+  document.getElementById('flagPct').textContent=pct+'%';
+  if(pct===0){ flag.className='completion-flag'; }
+  else if(pct<80){ flag.className='completion-flag partial'; }
+  else { flag.className='completion-flag complete'; }
+}
+updateCompletion();
+
+// ── CONSULT TIMER ──
+let ctRunning=false, ctSecs=0, ctStart=null, ctInt=null;
+
+function toggleConsultTimer(){
+  if(!ctRunning){
+    ctRunning=true; ctStart=Date.now()-ctSecs*1000;
+    ctInt=setInterval(()=>{
+      ctSecs=Math.floor((Date.now()-ctStart)/1000);
+      const m=Math.floor(ctSecs/60), s=(ctSecs%60).toString().padStart(2,'0');
+      document.getElementById('ctTime').textContent=m+':'+s;
+    },500);
+    document.getElementById('consultTimer').classList.add('running');
+    document.getElementById('ctLabel').textContent='En consulta';
+  } else {
+    ctRunning=false; clearInterval(ctInt);
+    document.getElementById('consultTimer').classList.remove('running');
+    document.getElementById('ctLabel').textContent='Pausado';
+    document.getElementById('metricDuration').textContent=document.getElementById('ctTime').textContent;
+  }
+}
+
+// ── API CONFIG ──
+function toggleApi(){ document.getElementById('apiBody').classList.toggle('open'); }
+let apiValidTimer=null, apiValidated=false;
+function checkApiKey(){
+  const k=document.getElementById('apiKeyInput').value.trim();
+  const st=document.getElementById('apiStatus');
+  apiValidated=false;
+  if(!k){ st.textContent='No configurada — usando demo'; st.style.color=''; return; }
+  if(!k.startsWith('AIza')){ st.textContent='✗ Formato invalido (debe empezar con AIza)'; st.style.color='var(--red)'; return; }
+  st.textContent='⏳ Validando key...'; st.style.color='var(--amber)';
+  clearTimeout(apiValidTimer);
+  apiValidTimer=setTimeout(()=>validateGeminiKey(k),500);
+}
+async function validateGeminiKey(k){
+  const st=document.getElementById('apiStatus');
+  try{
+    const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+encodeURIComponent(k));
+    const d=await r.json();
+    if(!r.ok){
+      const msg=(d && d.error && d.error.message) ? d.error.message : ('HTTP '+r.status);
+      st.textContent='✗ Key invalida: '+msg; st.style.color='var(--red)'; apiValidated=false; return;
+    }
+    const hasFlash=(d.models||[]).some(m=>/gemini-2\.0-flash|gemini-1\.5-flash/.test(m.name||''));
+    st.textContent='✓ Gemini conectada — '+(hasFlash?'gemini-2.0-flash listo':(d.models?d.models.length+' modelos':'key valida'));
+    st.style.color='var(--teal)'; apiValidated=true;
+    showToast('API Gemini validada ✓');
+  }catch(e){
+    st.textContent='✗ Error de red: '+e.message; st.style.color='var(--red)'; apiValidated=false;
+  }
+}
+
+// ── FORMAT ──
+const GEMINI_MODEL_CHAIN=['gemini-1.5-flash-latest','gemini-1.5-flash','gemini-1.5-flash-8b','gemini-2.0-flash','gemini-flash-latest'];
+let apiConnected=false;
+function getGeminiModelChain(){
+  const preferred=window.__preferredGeminiModel ? [window.__preferredGeminiModel] : [];
+  return preferred.concat(GEMINI_MODEL_CHAIN).filter((m,i,a)=>m && a.indexOf(m)===i);
+}
+function getGeminiModelLabel(model){
+  return (model||'').replace(/^gemini-/,'');
+}
+function setApiConnectedUI(connected, model){
+  apiValidated=connected;
+  apiConnected=connected;
+  const sec=document.getElementById('apiSec');
+  const badge=document.getElementById('apiOkBadge');
+  if(sec) sec.style.display=connected ? 'none' : '';
+  if(badge){
+    if(connected){
+      badge.textContent='✓ API OK · '+getGeminiModelLabel(model);
+      badge.style.display='inline-flex';
+    }else{
+      badge.style.display='none';
+    }
+  }
+}
+function isGeminiAuthError(msg,status){
+  return status===403 || /api key not valid|invalid api key|permission_denied|permission denied|api has not been enabled|forbidden/i.test(msg||'');
+}
+function isGeminiRetryableError(msg,status){
+  return status===429 || status>=500 || /quota|resource_exhausted|rate limit|too many requests|unavailable|overloaded|model .*not found|not found for api version|does not exist|unsupported/i.test(msg||'');
+}
+async function callGeminiModel(apiKey, model, reqBody){
+  const url='https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent?key='+encodeURIComponent(apiKey);
+  let resp, data={};
+  try{
+    resp=await fetch(url,{ method:'POST', headers:{'Content-Type':'application/json'}, body:reqBody });
+    try{ data=await resp.json(); }catch(_){ data={}; }
+  }catch(err){
+    return {ok:false,status:0,data:null,errorMessage:err.message||'Error de red'};
+  }
+  const text=(data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text) ? data.candidates[0].content.parts[0].text : '';
+  const errorMessage=(data && data.error && data.error.message) ? data.error.message : ('HTTP '+resp.status);
+  return {ok:resp.ok,status:resp.status,data,text,errorMessage};
+}
+function checkApiKey(){
+  const k=document.getElementById('apiKeyInput').value.trim();
+  const st=document.getElementById('apiStatus');
+  setApiConnectedUI(false);
+  if(!k){ st.textContent='No configurada â€” usando demo'; st.style.color=''; return; }
+  if(!k.startsWith('AIza')){ st.textContent='âœ— Formato invalido (debe empezar con AIza)'; st.style.color='var(--red)'; return; }
+  st.textContent='â³ Validando key...'; st.style.color='var(--amber)';
+  clearTimeout(apiValidTimer);
+  apiValidTimer=setTimeout(()=>validateGeminiKey(k),500);
+}
+async function validateGeminiKey(k){
+  const st=document.getElementById('apiStatus');
+  try{
+    const reqBody=JSON.stringify({
+      contents:[{role:'user',parts:[{text:'Responde solo OK'}]}],
+      generationConfig:{temperature:0,maxOutputTokens:4}
+    });
+    let lastErr='Sin respuesta';
+    for(const model of getGeminiModelChain()){
+      const result=await callGeminiModel(k, model, reqBody);
+      if(result.ok){
+        window.__preferredGeminiModel=model;
+        st.textContent='âœ“ API validada â€” '+getGeminiModelLabel(model);
+        st.style.color='var(--teal)';
+        setApiConnectedUI(true, model);
+        showToast('API Gemini validada con '+getGeminiModelLabel(model)+' âœ“');
+        return;
+      }
+      lastErr=result.errorMessage;
+      if(isGeminiAuthError(result.errorMessage, result.status)){
+        st.textContent='âœ— Key invalida: '+result.errorMessage;
+        st.style.color='var(--red)';
+        apiValidated=false;
+        return;
+      }
+      if(!isGeminiRetryableError(result.errorMessage, result.status)) break;
+    }
+    st.textContent='âœ— Sin cupo o sin acceso usable: '+lastErr;
+    st.style.color='var(--red)';
+    apiValidated=false;
+  }catch(e){
+    st.textContent='âœ— Error de red: '+e.message;
+    st.style.color='var(--red)';
+    apiValidated=false;
+  }
+}
+
+let currentFmt='control';
+const fmtNames={control:'nota de control',soap:'SOAP',hc:'historia clínica',eco:'nota de procedimiento',interconsulta:'interconsulta',libre:'nota libre'};
+
+function selectFmt(card,fmt){
+  document.querySelectorAll('.fmt-card').forEach(c=>c.classList.remove('selected'));
+  card.classList.add('selected'); currentFmt=fmt;
+}
+
+// ── SECTION DEFINITIONS ──
+const fmtSections={
+  control:[
+    {l:'EV',n:'Evolución clínica',key:'evolucion',required:['síntomas','dolor','rigidez'],txt:'Paciente refiere mejoría parcial del dolor articular en manos y muñecas bilaterales. Rigidez matutina de ~30 minutos. Buena tolerancia al metotrexate. Cumplimiento adecuado.'},
+    {l:'EF',n:'Examen físico',key:'examen',required:['PA','FC','articulaciones'],txt:'PA 128/82 · FC 74 · T 36.4°C. Leve sinovitis IFP 2°-3° mano derecha. Sin calor articular. PCR 12 mg/L (prev. 18). DAS28-PCR: 3.2 moderada.'},
+    {l:'DX',n:'Análisis',key:'analisis',required:['diagnóstico','actividad'],txt:'AR (M05.9) actividad moderada con tendencia a mejoría. Respuesta parcial a MTX. No se justifica escalamiento terapéutico aún.'},
+    {l:'PL',n:'Plan',key:'plan',required:['medicamento','control','labs'],txt:'Continuar MTX 15 mg/sem + ácido fólico. Naproxeno 500 mg c/12h PRN. Labs y control en 3 meses.'}
+  ],
+  soap:[
+    {l:'S',n:'Subjetivo',key:'subjetivo',required:['dolor','síntomas'],txt:'Mejoría del dolor articular. Rigidez matutina ~30 min. Buena tolerancia al MTX.'},
+    {l:'O',n:'Objetivo',key:'objetivo',required:['PA','examen'],txt:'PA 128/82 · FC 74. Sinovitis IFP 2°-3° MCD. PCR 12 mg/L. DAS28: 3.2.'},
+    {l:'A',n:'Análisis',key:'analisis',required:['diagnóstico'],txt:'AR actividad moderada. Respuesta parcial a MTX.'},
+    {l:'P',n:'Plan',key:'plan',required:['tratamiento','control'],txt:'Continuar esquema. Labs en 3 meses. Cita trimestral.'}
+  ],
+  hc:[
+    {l:'AN',n:'Anamnesis',key:'anamnesis',required:['inicio','evolución'],txt:'Paciente femenina, 54 años. AR seropositiva desde 2018. FR 148 UI/mL, anti-CCP 220 U/mL.'},
+    {l:'AP',n:'Antecedentes',key:'antecedentes',required:[],txt:'HTA controlada. Sin alergias conocidas. No fumadora.'},
+    {l:'EF',n:'Examen físico',key:'examen',required:['PA','articulaciones'],txt:'PA 128/82 · FC 74 · Peso 68 kg. Sinovitis IFP bilateral. Fuerza 4+/5.'},
+    {l:'DX',n:'Diagnóstico',key:'diagnostico',required:['CIE','actividad'],txt:'1. AR seropositiva (M05.9) — actividad moderada (DAS28 3.2)'},
+    {l:'PL',n:'Plan',key:'plan',required:['tratamiento'],txt:'Continuar MTX 15 mg/sem + ácido fólico. Reevaluar en 3 meses.'}
+  ],
+  eco:[
+    {l:'IND',n:'Indicación',key:'indicacion',required:['articulación'],txt:'Evaluación sinovial en manos. AR conocida, control de respuesta.'},
+    {l:'HAL',n:'Hallazgos',key:'hallazgos',required:['sinovitis','Doppler'],txt:'MCF 2-3 derechas: sinovitis grado I escala grises, sin Doppler activo.'},
+    {l:'CC',n:'Conclusión',key:'conclusion',required:['grado','correlación'],txt:'Sinovitis residual leve MCF 2-3 derecha sin actividad inflamatoria activa.'}
+  ],
+  interconsulta:[
+    {l:'MOT',n:'Motivo',key:'motivo',required:['especialidad','razón'],txt:'Solicito valoración oftalmológica para screening de toxicidad retiniana por MTX.'},
+    {l:'RES',n:'Resumen clínico',key:'resumen',required:['diagnóstico','tratamiento'],txt:'AR seropositiva (M05.9). MTX 15 mg/sem desde 2018. DAS28 3.2.'},
+    {l:'SOL',n:'Solicitud',key:'solicitud',required:['estudio'],txt:'Fondo de ojo, campo visual y OCT para screening de toxicidad retiniana.'}
+  ],
+  libre:[
+    {l:'NT',n:'Nota',key:'nota',required:[],txt:''}
+  ]
+};
+
+// ── RECORDING ──
+let recState='idle', timerInt, dictSecs=0, recognition=null, liveTranscript='';
+
+function toggleRec(){ if(recState==='idle') startRec(); else if(recState==='recording') stopRec(); }
+
+function clearTranscript(){ liveTranscript=''; const ta=document.getElementById('transcriptArea'); if(ta) ta.value=''; }
+
+function startRec(){
+  recState='recording'; dictSecs=0; liveTranscript='';
+  document.getElementById('apiError').style.display='none';
+  document.getElementById('transcriptBox').style.display='block';
+  const ta=document.getElementById('transcriptArea'); if(ta) ta.value='';
+  const srSt=document.getElementById('srStatus');
+  document.getElementById('micBtn').classList.replace('idle','recording');
+  document.getElementById('wave').classList.add('show');
+  document.getElementById('micLbl').textContent='Grabando — toca para detener';
+  document.getElementById('rtimer').classList.add('show');
+  timerInt=setInterval(()=>{ dictSecs++; document.getElementById('rtimer').textContent=Math.floor(dictSecs/60)+':'+(dictSecs%60).toString().padStart(2,'0'); },1000);
+
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){
+    srSt.textContent='⚠ Tu navegador no soporta reconocimiento de voz. Usa Chrome/Edge o escribe el dictado manualmente abajo.';
+    srSt.style.color='var(--amber)';
+    return;
+  }
+  try{
+    recognition=new SR();
+    recognition.lang='es-BO';
+    recognition.continuous=true;
+    recognition.interimResults=true;
+    let finalTxt='';
+    recognition.onresult=e=>{
+      let interim='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const tr=e.results[i][0].transcript;
+        if(e.results[i].isFinal) finalTxt+=tr+' '; else interim+=tr;
+      }
+      liveTranscript=finalTxt;
+      if(ta) ta.value=finalTxt+(interim?('  … '+interim):'');
+    };
+    recognition.onerror=ev=>{
+      srSt.textContent='⚠ Error de reconocimiento: '+ev.error+'. Puedes escribir manualmente abajo.';
+      srSt.style.color='var(--red)';
+    };
+    recognition.onend=()=>{ srSt.textContent='🔴 Reconocimiento detenido.'; srSt.style.color='var(--g4)'; };
+    recognition.start();
+    srSt.textContent='🎙 Escuchando en es-BO... habla normal.';
+    srSt.style.color='var(--teal)';
+  }catch(e){
+    srSt.textContent='⚠ No se pudo iniciar: '+e.message;
+    srSt.style.color='var(--red)';
+  }
+}
+
+function stopRec(){
+  recState='processing'; clearInterval(timerInt);
+  if(recognition){ recognition.stop(); recognition=null; }
+  document.getElementById('micBtn').classList.replace('recording','idle');
+  document.getElementById('wave').classList.remove('show');
+  document.getElementById('micLbl').textContent='';
+  document.getElementById('rtimer').classList.remove('show');
+  document.getElementById('procFmt').textContent=fmtNames[currentFmt];
+  document.getElementById('proc').classList.add('show');
+  document.getElementById('metricDictado').textContent=Math.floor(dictSecs/60)+':'+(dictSecs%60).toString().padStart(2,'0');
+  document.getElementById('metricFmt').textContent=fmtNames[currentFmt];
+
+  const ctx=buildContext();
+  const apiKey=document.getElementById('apiKeyInput').value.trim();
+  // Priorizar el texto del textarea (editable) sobre liveTranscript
+  const ta=document.getElementById('transcriptArea');
+  const finalTxt=(ta && ta.value.trim()) ? ta.value.trim() : liveTranscript.trim();
+  if(!finalTxt){
+    document.getElementById('proc').classList.remove('show');
+    showApiError('No se capturó dictado. Escribe o pega el texto en el área de transcripción y vuelve a presionar el micrófono (o genera con texto manual).');
+    recState='done';
+    return;
+  }
+  if(apiKey.startsWith('AIza')){
+    generateNote(ctx, finalTxt, currentFmt, apiKey);
+  } else {
+    // Sin key: mostrar demo pero avisar
+    setTimeout(()=>{
+      document.getElementById('proc').classList.remove('show');
+      showApiError('Modo DEMO (sin API key). Los resultados son estáticos, no se está diarizando. Configura tu Gemini key arriba para procesar tu dictado real.');
+      buildResult(fmtSections[currentFmt]||fmtSections.control);
+      recState='done';
+    },800);
+  }
+}
+function resetRecUiDesktop(message, color){
+  clearInterval(timerInt);
+  recState='idle';
+  if(recognition){
+    try{ recognition.onend=null; recognition.stop(); }catch(_){}
+    recognition=null;
+  }
+  const micBtn=document.getElementById('micBtn');
+  if(micBtn){
+    micBtn.classList.remove('recording');
+    micBtn.classList.add('idle');
+  }
+  document.getElementById('wave').classList.remove('show');
+  document.getElementById('micLbl').textContent='Toca para dictar';
+  document.getElementById('rtimer').classList.remove('show');
+  document.getElementById('rtimer').textContent='0:00';
+  const srSt=document.getElementById('srStatus');
+  if(srSt){
+    srSt.textContent=message||'';
+    srSt.style.color=color||'var(--g4)';
+  }
+}
+async function ensureMicAccessDesktop(){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return {ok:true};
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    stream.getTracks().forEach(t=>t.stop());
+    return {ok:true};
+  }catch(err){
+    const msg=err && err.name==='NotAllowedError'
+      ? 'Permiso de micrófono denegado. Habilítalo en el navegador.'
+      : 'No se pudo acceder al micrófono.';
+    return {ok:false,error:msg};
+  }
+}
+function setApiBadgeDesktop(state, text, model){
+  const badge=document.getElementById('apiOkBadge');
+  const body=document.getElementById('apiBody');
+  const status=document.getElementById('apiStatus');
+  if(!badge || !body || !status) return;
+  badge.className='api-ok-badge';
+  if(state==='ok'){
+    badge.classList.add('is-ok');
+    badge.textContent='API OK · '+getGeminiModelLabel(model);
+    badge.style.display='inline-flex';
+    status.textContent='API validada';
+    status.style.color='var(--teal)';
+    body.classList.remove('open');
+    apiValidated=true;
+  }else if(state==='error'){
+    badge.classList.add('is-error');
+    badge.textContent='API error';
+    badge.style.display='inline-flex';
+    status.textContent=text;
+    status.style.color='var(--red)';
+    body.classList.remove('open');
+    apiValidated=false;
+  }else if(state==='pending'){
+    badge.classList.add('is-pending');
+    badge.textContent='Validando...';
+    badge.style.display='inline-flex';
+    status.textContent='Validando key...';
+    status.style.color='var(--amber)';
+    body.classList.remove('open');
+  }else{
+    badge.style.display='none';
+    status.textContent='No configurada — usando demo';
+    status.style.color='';
+    apiValidated=false;
+  }
+}
+function setApiConnectedUI(connected, model){
+  if(connected) setApiBadgeDesktop('ok','',model);
+  else setApiBadgeDesktop('idle');
+}
+function checkApiKey(){
+  const k=document.getElementById('apiKeyInput').value.trim();
+  if(!k){ setApiBadgeDesktop('idle'); return; }
+  if(!k.startsWith('AIza')){ setApiBadgeDesktop('error','Formato inválido'); return; }
+  setApiBadgeDesktop('pending');
+  clearTimeout(apiValidTimer);
+  apiValidTimer=setTimeout(()=>validateGeminiKey(k),500);
+}
+async function validateGeminiKey(k){
+  let lastErr='Sin respuesta';
+  const reqBody=JSON.stringify({
+    contents:[{role:'user',parts:[{text:'Responde solo OK'}]}],
+    generationConfig:{temperature:0,maxOutputTokens:4}
+  });
+  for(const model of getGeminiModelChain()){
+    const result=await callGeminiModel(k, model, reqBody);
+    if(result.ok){
+      window.__preferredGeminiModel=model;
+      setApiBadgeDesktop('ok','',model);
+      showToast('API Gemini validada con '+getGeminiModelLabel(model)+' ✓');
+      return;
+    }
+    lastErr=result.errorMessage;
+    if(isGeminiAuthError(result.errorMessage, result.status)){
+      setApiBadgeDesktop('error','Key inválida');
+      return;
+    }
+    if(!isGeminiRetryableError(result.errorMessage, result.status)) break;
+  }
+  setApiBadgeDesktop('error','Sin cupo o acceso usable');
+}
+async function startRec(){
+  if(recState!=='idle') return;
+  document.getElementById('apiError').style.display='none';
+  document.getElementById('transcriptBox').style.display='block';
+  const ta=document.getElementById('transcriptArea');
+  if(ta) ta.value='';
+  const srSt=document.getElementById('srStatus');
+  srSt.textContent='Solicitando acceso al micrófono...';
+  srSt.style.color='var(--amber)';
+  const micAccess=await ensureMicAccessDesktop();
+  if(!micAccess.ok){
+    resetRecUiDesktop(micAccess.error,'var(--red)');
+    return;
+  }
+  recState='recording';
+  dictSecs=0;
+  liveTranscript='';
+  document.getElementById('micBtn').classList.remove('idle');
+  document.getElementById('micBtn').classList.add('recording');
+  document.getElementById('wave').classList.add('show');
+  document.getElementById('micLbl').textContent='Grabando — toca para detener';
+  document.getElementById('rtimer').classList.add('show');
+  timerInt=setInterval(()=>{
+    dictSecs++;
+    document.getElementById('rtimer').textContent=Math.floor(dictSecs/60)+':'+(dictSecs%60).toString().padStart(2,'0');
+  },1000);
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){
+    resetRecUiDesktop('Tu navegador no soporta reconocimiento de voz. Usa Chrome o Edge.','var(--amber)');
+    return;
+  }
+  try{
+    recognition=new SR();
+    recognition.lang='es-BO';
+    recognition.continuous=true;
+    recognition.interimResults=true;
+    let finalTxt='';
+    recognition.onresult=e=>{
+      let interim='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const tr=e.results[i][0].transcript;
+        if(e.results[i].isFinal) finalTxt+=tr+' '; else interim+=tr;
+      }
+      liveTranscript=finalTxt;
+      if(ta) ta.value=finalTxt+(interim?('  … '+interim):'');
+    };
+    recognition.onerror=ev=>{
+      resetRecUiDesktop('Error de reconocimiento: '+ev.error,'var(--red)');
+    };
+    recognition.onend=()=>{
+      if(recState==='recording') resetRecUiDesktop('El reconocimiento se detuvo. Intenta de nuevo.','var(--amber)');
+    };
+    recognition.start();
+    srSt.textContent='Escuchando en es-BO...';
+    srSt.style.color='var(--teal)';
+  }catch(e){
+    resetRecUiDesktop('No se pudo iniciar: '+e.message,'var(--red)');
+  }
+}
+function showApiError(msg){
+  const el=document.getElementById('apiError');
+  el.textContent=msg; el.style.display='block';
+}
+
+function buildContext(){
+  const g=id=>{ const e=document.getElementById(id); return e?e.value:''; };
+  const dasEl=document.getElementById('das-val');
+  return { nombre:g('f-nombre'),diag:g('f-diag'),visita:g('f-visita'),motivo:g('f-motivo'), pas:g('f-pas'),pad:g('f-pad'),fc:g('f-fc'),temp:g('f-temp'), pcr:g('l-pcr'),vsg:g('l-vsg'),hb:g('l-hb'),tgo:g('l-tgo'),tgp:g('l-tgp'),creat:g('l-creat'), fr:g('l-fr'),anticcp:g('l-anticcp'),das:dasEl?dasEl.textContent:'',notas:g('f-notas') };
+}
+
+async function generateNote(ctx, transcript, fmt, apiKey){
+  var fmtDescs = {
+    control: 'Nota de seguimiento de enfermedad cronica. Secciones: Evolucion clinica, Examen fisico, Analisis, Plan.',
+    soap: 'Formato SOAP. Secciones: Subjetivo, Objetivo, Analisis, Plan.',
+    hc: 'Historia clinica completa. Secciones: Anamnesis, Antecedentes, Examen fisico, Diagnostico, Plan.',
+    eco: 'Nota de ecografia musculoesqueletica. Secciones: Indicacion, Tecnica, Hallazgos, Conclusion.',
+    interconsulta: 'Carta de interconsulta. Secciones: Motivo, Resumen clinico, Solicitud.',
+    libre: 'Nota libre sin estructura.'
+  };
+  var labParts = [];
+  if(ctx.pcr) labParts.push('PCR: '+ctx.pcr+' mg/L');
+  if(ctx.vsg) labParts.push('VSG: '+ctx.vsg+' mm/h');
+  if(ctx.hb) labParts.push('Hb: '+ctx.hb+' g/dL');
+  if(ctx.tgo) labParts.push('TGO: '+ctx.tgo+' U/L');
+  if(ctx.creat) labParts.push('Creatinina: '+ctx.creat+' mg/dL');
+  if(ctx.fr) labParts.push('FR: '+ctx.fr+' UI/mL');
+  if(ctx.anticcp) labParts.push('Anti-CCP: '+ctx.anticcp+' U/mL');
+  var labTxt = labParts.join(', ');
+  var vitalParts = [];
+  if(ctx.pas && ctx.pad) vitalParts.push('PA: '+ctx.pas+'/'+ctx.pad+' mmHg');
+  if(ctx.fc) vitalParts.push('FC: '+ctx.fc+' lpm');
+  if(ctx.temp) vitalParts.push('T: '+ctx.temp+' C');
+  var vitalsTxt = vitalParts.join(', ');
+  var dasNum = parseFloat(ctx.das);
+  var dasTxt = (!isNaN(dasNum)) ? 'DAS28-PCR: '+ctx.das : '';
+  var lines = [
+    'Formato: '+(fmtDescs[fmt]||fmtDescs.libre),
+    'Paciente: '+(ctx.nombre||'No especificado'),
+    'Diagnostico: '+(ctx.diag||'No especificado'),
+    'Visita: '+(ctx.visita||'control'),
+    ctx.motivo ? 'Motivo: '+ctx.motivo : null,
+    vitalsTxt ? 'Signos vitales: '+vitalsTxt : null,
+    labTxt ? 'Laboratorios: '+labTxt : null,
+    dasTxt || null,
+    ctx.notas ? 'Notas adicionales: '+ctx.notas : null,
+    'Dictado: '+transcript
+  ].filter(Boolean);
+  var userMsg = lines.join('\n');
+  var sysMsg = [
+    'Eres un asistente clinico experto en reumatologia e interna, ayudando a un medico en Bolivia.',
+    'TAREA 1 (DIARIZACION + TRADUCCION): El dictado incluye frases del paciente en lenguaje coloquial y del medico. Debes:',
+    '  a) Diferenciar quien habla (paciente vs medico).',
+    '  b) Traducir expresiones del paciente a terminologia medica formal.',
+    '     Ejemplos: "me duelen las coyunturas" -> "artralgias"; "tengo las manos tiesas en la mañana" -> "rigidez matutina";',
+    '     "me hinchan los dedos" -> "tumefaccion de articulaciones interfalangicas"; "me canso mucho" -> "astenia/fatiga";',
+    '     "pin pin pin en el pecho" -> "palpitaciones"; "me arde al orinar" -> "disuria".',
+    'TAREA 2 (NOTA): Redacta la nota en espanol medico formal, conciso, sin repeticiones, integrando el contexto del formulario (signos vitales, labs, DAS28).',
+    'FORMATO DE SALIDA: Responde SOLO con JSON valido, sin backticks ni markdown.',
+    'Esquema: {"secciones":[{"letra":"EV","nombre":"Evolucion","contenido":"texto","confianza":"alta|media|baja"}]}',
+    'Confianza: alta = informacion suficiente y clara; media = parcial / requiere confirmacion; baja = insuficiente o ausente.'
+  ].join('\n');
+  try{
+    // ── Gemini API (gratuita) ──
+    var reqBody = JSON.stringify({
+      systemInstruction: { parts: [{ text: sysMsg }] },
+      contents: [{ role: 'user', parts: [{ text: userMsg }] }],
+      generationConfig: {
+        temperature: 0.3,
+        maxOutputTokens: 2048,
+        responseMimeType: 'application/json'
+      }
+    });
+    // Cadena de fallback: si un modelo tiene quota 0 o falla, probar el siguiente
+    var modelChain = getGeminiModelChain();
+    var resp=null, data=null, usedModel=null, lastErr='';
+    for(var mi=0; mi<modelChain.length; mi++){
+      var m = modelChain[mi];
+      var result = await callGeminiModel(apiKey, m, reqBody);
+      if(result.ok){ usedModel=m; data=result.data; window.__preferredGeminiModel=m; break; }
+      lastErr = m+': '+result.errorMessage;
+      if(isGeminiAuthError(result.errorMessage, result.status)) throw new Error(result.errorMessage);
+    }
+    if(!usedModel){ throw new Error('Todos los modelos fallaron. Ultimo error: '+lastErr); }
+    setApiConnectedUI(true, usedModel);
+    var raw = (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text) ? data.candidates[0].content.parts[0].text : '';
+    if(!raw) throw new Error('Respuesta vacía de Gemini. Revisa si el contenido fue bloqueado por filtros de seguridad.');
+    var clean = raw.replace(/```json/g,'').replace(/```/g,'').trim();
+    var parsed;
+    try{ parsed=JSON.parse(clean); }catch(pe){ throw new Error('JSON inválido de Gemini: '+clean.slice(0,120)); }
+    document.getElementById('proc').classList.remove('show');
+    var secDefs = fmtSections[fmt]||fmtSections.control;
+    var merged = secDefs.map(function(s,i){
+      var api = (parsed.secciones && parsed.secciones[i]) ? parsed.secciones[i] : {};
+      return Object.assign({}, s, {txt: api.contenido||s.txt, conf: api.confianza||'media'});
+    });
+    buildResult(merged); recState='done';
+    showToast('Nota generada con '+usedModel+' ✓');
+  }catch(e){
+    console.error('API error:', e);
+    document.getElementById('proc').classList.remove('show');
+    showApiError('Error al generar con Gemini: '+e.message+'. Mostrando demo.');
+    buildResult(fmtSections[fmt]||fmtSections.control); recState='done';
+  }
+}
+
+// ── BUILD RESULT + SEMAPHORE ──
+function buildResult(sections){
+  const wrap=document.getElementById('resultWrap');
+  wrap.innerHTML='';
+  const checkItemsEl=document.getElementById('checkItems');
+  checkItemsEl.innerHTML='';
+
+  sections.forEach((s,idx)=>{
+    const txt=s.txt||'';
+    const conf=s.conf||'alta';
+    const wordCount=txt.trim().split(/\s+/).filter(Boolean).length;
+
+    // Semaphore logic
+    let semClass='sem-empty', confClass='', confLabel='', confLevel='high';
+    let missingMsg='';
+
+    if(!txt||wordCount<3){ semClass='sem-low'; confClass='low'; confLabel='Sección vacía'; confLevel='low'; missingMsg='Esta sección está vacía. Completa manualmente.'; }
+    else if(conf==='baja'||wordCount<12){ semClass='sem-med'; confClass='med'; confLabel='Datos parciales'; confLevel='med'; missingMsg='Pocos datos disponibles. Revisa y completa.'; }
+    else { semClass='sem-ok'; confClass='high'; confLabel='Completo'; confLevel='high'; }
+
+    const div=document.createElement('div');
+    div.className='rsec '+semClass;
+    div.id='rsec-'+idx;
+    div.innerHTML=`
+      <div class="rsec-head">
+        <div class="rsec-left">
+          <div class="rsec-letter">${s.l.substring(0,3)}</div>
+          <span class="rsec-name">${s.n}</span>
+        </div>
+        <div class="rsec-right">
+          <div class="sem-dot" title="${confLabel}"></div>
+          <span class="conf-badge ${confClass}">${confLabel}</span>
+          <span class="ai-tag">IA · editable</span>
+        </div>
+      </div>
+      <div class="missing-alert ${missingMsg?'show':''}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        ${missingMsg}
+      </div>
+      <textarea rows="${Math.max(2,Math.ceil(txt.length/90))}" oninput="evalSection(${idx},this.value)">${txt}</textarea>`;
+    wrap.appendChild(div);
+
+    // Checklist item
+    const isDone=semClass==='sem-ok';
+    const ci=document.createElement('div');
+    ci.className='check-item'+(isDone?' done':'');
+    ci.id='ci-'+idx;
+    ci.innerHTML=`
+      <div class="ci-icon" id="cicon-${idx}">
+        ${isDone?`<svg viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2 2 4-3"/></svg>`:''}
+      </div>
+      <span>${s.n}</span>
+      <span style="margin-left:auto;font-size:10px;color:${semClass==='sem-ok'?'var(--teal)':semClass==='sem-med'?'var(--amber)':'var(--red)'}">${confLabel}</span>`;
+    checkItemsEl.appendChild(ci);
+  });
+
+  wrap.classList.add('show');
+  document.getElementById('resultActs').classList.add('show');
+  document.getElementById('micLbl').textContent='Nota generada';
+  updateApproval(sections.length);
+}
+
+// ── EVAL SECTION ON EDIT ──
+function evalSection(idx, val){
+  const el=document.getElementById('rsec-'+idx);
+  const wc=val.trim().split(/\s+/).filter(Boolean).length;
+  let sem,confClass,confLabel;
+  if(!val||wc<3){ sem='sem-low'; confClass='low'; confLabel='Sección vacía'; }
+  else if(wc<12){ sem='sem-med'; confClass='med'; confLabel='Datos parciales'; }
+  else { sem='sem-ok'; confClass='high'; confLabel='Completo'; }
+
+  el.className='rsec '+sem;
+  el.querySelector('.sem-dot').title=confLabel;
+  const cb=el.querySelector('.conf-badge');
+  cb.className='conf-badge '+confClass; cb.textContent=confLabel;
+  const ma=el.querySelector('.missing-alert');
+  if(sem==='sem-ok') ma.classList.remove('show');
+
+  // Update checklist
+  const ci=document.getElementById('ci-'+idx);
+  const ico=document.getElementById('cicon-'+idx);
+  if(ci){
+    ci.className='check-item'+(sem==='sem-ok'?' done':'');
+    ico.innerHTML=sem==='sem-ok'?`<svg viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2 2 4-3"/></svg>`:'';
+    ico.style.background=sem==='sem-ok'?'var(--teal)':'';
+    ico.style.border=sem==='sem-ok'?'none':'';
+    ci.querySelector('span:last-child').textContent=confLabel;
+    ci.querySelector('span:last-child').style.color=sem==='sem-ok'?'var(--teal)':sem==='sem-med'?'var(--amber)':'var(--red)';
+  }
+
+  const total=document.querySelectorAll('[id^="rsec-"]').length;
+  updateApproval(total);
+}
+
+// ── APPROVAL PROGRESS ──
+function updateApproval(total){
+  const done=document.querySelectorAll('.rsec.sem-ok').length;
+  const pct=total>0?Math.round(done/total*100):0;
+  document.getElementById('approveFill').style.width=pct+'%';
+  document.getElementById('approveItems').textContent=done+' de '+total+' secciones';
+  document.getElementById('approvePct').textContent=pct+'%';
+  const btn=document.getElementById('btnApprove');
+  btn.classList.toggle('ready',pct>=75);
+  btn.textContent=pct>=75?'✓ Aprobar nota':'Aprobar nota ('+pct+'%)';
+}
+
+// ── SAVE DRAFT ──
+function saveDraft(){
+  const sections=[];
+  document.querySelectorAll('[id^="rsec-"]').forEach(s=>{ const n=s.querySelector('.rsec-name'); const t=s.querySelector('textarea'); if(n&&t) sections.push({nombre:n.textContent,contenido:t.value}); });
+  const draft={ timestamp:new Date().toISOString(), paciente:document.getElementById('f-nombre').value, formato:currentFmt, secciones:sections };
+  localStorage.setItem('dictaai_draft_'+Date.now(), JSON.stringify(draft));
+  const btn=document.getElementById('btnDraft');
+  btn.classList.add('saved'); btn.innerHTML='✓ Borrador guardado';
+  setTimeout(()=>{ btn.classList.remove('saved'); btn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Guardar borrador'; }, 2500);
+  showToast('Borrador guardado en este dispositivo');
+}
+
+function printDraft(){ window.print(); }
+
+// ── APPROVE FINAL ──
+function approveFinal(){
+  const btn=document.getElementById('btnApprove');
+  if(!btn.classList.contains('ready')){ showToast('Completa al menos el 75% de las secciones'); return; }
+  btn.classList.add('approved'); btn.textContent='✓ Aprobada';
+  document.getElementById('completedBanner').classList.add('show');
+  if(ctRunning) toggleConsultTimer();
+  showToast('Nota aprobada y guardada');
+  saveDraft();
+}
+
+// ── RESET ──
+function resetDictado(){
+  recState='idle'; dictSecs=0;
+  document.getElementById('resultWrap').classList.remove('show');
+  document.getElementById('resultWrap').innerHTML='';
+  document.getElementById('resultActs').classList.remove('show');
+  document.getElementById('proc').classList.remove('show');
+  document.getElementById('micLbl').textContent='Toca para dictar';
+  document.getElementById('rtimer').textContent='0:00';
+  document.getElementById('checkItems').innerHTML='<div class="check-item" style="color:var(--g4);font-style:italic;font-size:11px;padding:12px">Genera una nota para ver el checklist</div>';
+  document.getElementById('approveFill').style.width='0%';
+  document.getElementById('approveItems').textContent='0 de 0 secciones';
+  document.getElementById('approvePct').textContent='0%';
+  document.getElementById('btnApprove').className='btn-approve';
+  document.getElementById('btnApprove').textContent='Aprobar nota';
+  document.getElementById('completedBanner').classList.remove('show');
+}
+
+// ── TOAST ──
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2400); }
+
+// ── CIE-10 AUTOCOMPLETE (curado: reumatología + medicina interna) ──
+const CIE10 = [
+  // Artritis inflamatorias
+  ['M05.9','Artritis reumatoide seropositiva'],
+  ['M06.0','Artritis reumatoide seronegativa'],
+  ['M06.9','Artritis reumatoide, no especificada'],
+  ['M07.3','Artritis psoriásica'],
+  ['M08.0','Artritis idiopática juvenil'],
+  ['M45','Espondilitis anquilosante'],
+  ['M46.1','Sacroileítis'],
+  ['M02.9','Artropatía reactiva'],
+  ['M13.9','Artritis, no especificada'],
+  // Conectivopatías
+  ['M32.9','Lupus eritematoso sistémico (LES)'],
+  ['M32.1','LES con compromiso de órganos'],
+  ['M35.0','Síndrome de Sjögren'],
+  ['M34.9','Esclerosis sistémica (esclerodermia)'],
+  ['M34.1','Síndrome CREST'],
+  ['M33.2','Polimiositis'],
+  ['M33.0','Dermatomiositis juvenil'],
+  ['M35.1','Síndrome de sobreposición / EMTC'],
+  ['M35.3','Polimialgia reumática'],
+  // Vasculitis
+  ['M31.5','Arteritis de células gigantes'],
+  ['M31.3','Granulomatosis con poliangeítis (Wegener)'],
+  ['M30.0','Poliarteritis nodosa'],
+  ['M31.7','Poliangeítis microscópica'],
+  // Cristales
+  ['M10.9','Gota, no especificada'],
+  ['M10.0','Gota idiopática'],
+  ['M11.2','Condrocalcinosis (pseudogota)'],
+  // Artrosis
+  ['M15.9','Poliartrosis'],
+  ['M16.9','Coxartrosis (cadera)'],
+  ['M17.9','Gonartrosis (rodilla)'],
+  ['M18.9','Rizartrosis (pulgar)'],
+  ['M19.9','Artrosis no especificada'],
+  ['M47.9','Espondiloartrosis'],
+  // Dolor / columna / partes blandas
+  ['M54.5','Lumbalgia'],
+  ['M54.2','Cervicalgia'],
+  ['M54.4','Lumbociática'],
+  ['M54.9','Dorsalgia, no especificada'],
+  ['M79.7','Fibromialgia'],
+  ['M79.1','Mialgia'],
+  ['M25.5','Dolor articular (artralgia)'],
+  ['M65.9','Sinovitis y tenosinovitis'],
+  ['M70.9','Bursitis / trastorno de partes blandas'],
+  ['M75.0','Capsulitis adhesiva del hombro'],
+  ['M75.1','Síndrome del manguito rotador'],
+  ['M77.0','Epicondilitis medial'],
+  ['M77.1','Epicondilitis lateral'],
+  ['M72.2','Fascitis plantar'],
+  ['M67.4','Ganglión'],
+  ['G56.0','Síndrome del túnel carpiano'],
+  // Hueso
+  ['M81.0','Osteoporosis postmenopáusica'],
+  ['M81.9','Osteoporosis / osteopenia'],
+  ['M80.9','Osteoporosis con fractura patológica'],
+  ['M85.8','Baja masa ósea'],
+  ['M87.0','Necrosis avascular ósea'],
+  // Medicina interna común
+  ['I10','Hipertensión arterial esencial'],
+  ['I11.9','Cardiopatía hipertensiva'],
+  ['I25.9','Cardiopatía isquémica crónica'],
+  ['E11.9','Diabetes mellitus tipo 2'],
+  ['E10.9','Diabetes mellitus tipo 1'],
+  ['E78.5','Hiperlipidemia / dislipidemia'],
+  ['E66.9','Obesidad'],
+  ['E03.9','Hipotiroidismo'],
+  ['E05.9','Hipertiroidismo'],
+  ['N18.9','Enfermedad renal crónica'],
+  ['K21.9','Enfermedad por reflujo (ERGE)'],
+  ['K29.7','Gastritis crónica'],
+  ['J45.9','Asma'],
+  ['J44.9','EPOC'],
+  ['D50.9','Anemia ferropénica'],
+  ['D64.9','Anemia de enfermedad crónica'],
+  ['F41.1','Trastorno de ansiedad generalizada'],
+  ['F32.9','Episodio depresivo'],
+  ['G43.9','Migraña']
+];
+function cie10Suggest(inp, listId){
+  const q = inp.value.trim().toLowerCase();
+  const list = document.getElementById(listId);
+  if(!q){ list.style.display='none'; return; }
+  // Tomar el último término después de coma (para dx secundarios)
+  const parts = q.split(/[,;]/);
+  const term = parts[parts.length-1].trim();
+  if(term.length<1){ list.style.display='none'; return; }
+  const matches = CIE10.filter(([c,d])=>
+    c.toLowerCase().includes(term) || d.toLowerCase().includes(term) ||
+    d.toLowerCase().split(' ').some(w=>w.startsWith(term))
+  ).slice(0,10);
+  if(!matches.length){ list.innerHTML='<div class="cie10-empty">Sin coincidencias CIE-10</div>'; list.style.display='block'; return; }
+  list.innerHTML = matches.map(([c,d])=>
+    `<div class="cie10-item" onmousedown="cie10Pick('${inp.id}','${listId}','${c}','${d.replace(/'/g,"\\'")}')"><span class="cie10-desc">${d}</span><span class="cie10-code">${c}</span></div>`
+  ).join('');
+  list.style.display='block';
+}
+function cie10Pick(inputId, listId, code, desc){
+  const inp = document.getElementById(inputId);
+  const val = desc + ' (' + code + ')';
+  // Si ya había comas (diagnósticos secundarios), conservar los previos y reemplazar solo el último
+  if(inp.value.indexOf(',')>-1){
+    const parts = inp.value.split(',');
+    parts[parts.length-1] = ' ' + val;
+    inp.value = parts.join(',');
+  } else {
+    inp.value = val;
+  }
+  document.getElementById(listId).style.display='none';
+  if(typeof updateCompletion==='function') updateCompletion();
+  // Actualizar contexto header
+  const ctxDiag = document.getElementById('ctx-diag');
+  if(ctxDiag && inputId==='f-diag'){ ctxDiag.textContent = desc + ' · Control'; }
+  showToast(code+' — '+desc);
+}
+
+// ── IMPORT desde móvil (diarización/transcript) ──
+function importFromMobile(codeOverride){
+  const input=document.getElementById('importCode');
+  let raw=(codeOverride||(input?input.value:'')||'').trim();
+  if(!raw){ showToast('Pega el código o URL del móvil primero'); return; }
+  try{
+    // Si pegaron URL completa, extraer el parámetro dicta= o nota=
+    if(raw.indexOf('http')===0 || raw.indexOf('?')>-1){
+      const q=raw.split('?')[1]||'';
+      const usp=new URLSearchParams(q);
+      raw = usp.get('dicta')||usp.get('nota')||raw;
+    }
+    const json=decodeURIComponent(escape(atob(raw)));
+    const payload=JSON.parse(json);
+    // Rellenar paciente si viene
+    if(payload.paciente){ const el=document.getElementById('ctx-name'); if(el) el.textContent=payload.paciente; const fn=document.getElementById('f-nombre'); if(fn) fn.value=payload.paciente; }
+    if(payload.dx){ const el=document.getElementById('ctx-diag'); if(el) el.textContent=payload.dx; }
+    // Rellenar formato si viene
+    if(payload.fmt){
+      const cards=document.querySelectorAll('.fmt-card');
+      cards.forEach(c=>c.classList.remove('selected'));
+      const card=document.querySelector('.fmt-card[onclick*="\''+payload.fmt+'\'"]');
+      if(card){ card.classList.add('selected'); currentFmt=payload.fmt; }
+    }
+    // Cargar transcripción cruda en el textarea
+    if(payload.transcript){
+      const ta=document.getElementById('transcriptArea');
+      if(ta){ ta.value=payload.transcript; liveTranscript=payload.transcript; }
+    }
+    // Si hay secciones ya generadas, mostrarlas
+    if(payload.secs && payload.secs.length){
+      const secDefs=fmtSections[payload.fmt||currentFmt]||fmtSections.control;
+      const merged=secDefs.map(function(s,i){
+        const api=payload.secs[i]||{};
+        return Object.assign({},s,{txt:api.c||api.contenido||s.txt});
+      });
+      buildResult(merged); recState='done';
+    }
+    showToast('Importado desde móvil ✓ ('+(payload.transcript?'transcripción':'nota')+' lista)');
+    if(input) input.value='';
+    // Saltar al tab Dictado
+    const dictTab=document.querySelector('.tab[onclick*="dictado"],.tab[onclick*="1"]');
+  }catch(e){
+    console.error(e);
+    showToast('Código inválido: '+e.message);
+  }
+}
+// Auto-import si la URL ya trae ?dicta= o ?nota=
+(function(){
+  try{
+    const usp=new URLSearchParams(location.search);
+    const code=usp.get('dicta')||usp.get('nota');
+    if(code) setTimeout(()=>importFromMobile(code), 400);
+  }catch(e){}
+})();
+
+function validateApiKeyFastDesktop(key){
+  const ctrl=new AbortController();
+  const timeout=setTimeout(()=>ctrl.abort(), 6000);
+  return fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+encodeURIComponent(key), { signal: ctrl.signal })
+    .then(async resp => {
+      let data={};
+      try{ data=await resp.json(); }catch(_){ data={}; }
+      return { ok: resp.ok, status: resp.status, data };
+    })
+    .finally(()=>clearTimeout(timeout));
+}
+
+checkApiKey = function(){
+  const k=document.getElementById('apiKeyInput').value.trim();
+  if(!k){ setApiBadgeDesktop('idle'); return; }
+  if(!k.startsWith('AIza')){ setApiBadgeDesktop('error','Formato inválido'); return; }
+  setApiBadgeDesktop('pending');
+  clearTimeout(apiValidTimer);
+  apiValidTimer=setTimeout(()=>validateGeminiKey(k), 350);
+};
+
+validateGeminiKey = async function(k){
+  try{
+    const result=await validateApiKeyFastDesktop(k);
+    if(!result.ok){
+      const msg=(result.data && result.data.error && result.data.error.message) ? result.data.error.message : ('HTTP '+result.status);
+      setApiBadgeDesktop('error', isGeminiAuthError(msg, result.status) ? 'Key inválida' : 'Sin acceso a Gemini');
+      return;
+    }
+    const available=(result.data.models||[]).map(m=>m.name||'');
+    const usable=getGeminiModelChain().find(model=>available.some(name=>name.endsWith('/'+model)));
+    if(!usable){
+      setApiBadgeDesktop('error','Sin modelos flash disponibles');
+      return;
+    }
+    window.__preferredGeminiModel=usable;
+    const apiInput=document.getElementById('apiKeyInput');
+    if(apiInput) apiInput.blur();
+    setApiBadgeDesktop('ok','',usable);
+    showToast('API Gemini validada con '+getGeminiModelLabel(usable)+' ✓');
+  }catch(e){
+    setApiBadgeDesktop('error', e && e.name==='AbortError' ? 'Timeout al validar' : 'Error de red');
+  }
+};
+
+startRec = async function(){
+  if(recState!=='idle') return;
+  document.getElementById('apiError').style.display='none';
+  document.getElementById('transcriptBox').style.display='block';
+  const ta=document.getElementById('transcriptArea');
+  if(ta) ta.value='';
+  const srSt=document.getElementById('srStatus');
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){
+    resetRecUiDesktop('Tu navegador no soporta reconocimiento de voz. Usa Chrome o Edge.','var(--amber)');
+    return;
+  }
+  recState='recording';
+  dictSecs=0;
+  liveTranscript='';
+  document.getElementById('micBtn').classList.remove('idle');
+  document.getElementById('micBtn').classList.add('recording');
+  document.getElementById('wave').classList.add('show');
+  document.getElementById('micLbl').textContent='Grabando — toca para detener';
+  document.getElementById('rtimer').classList.add('show');
+  srSt.textContent='Iniciando micrófono...';
+  srSt.style.color='var(--amber)';
+  timerInt=setInterval(()=>{
+    dictSecs++;
+    document.getElementById('rtimer').textContent=Math.floor(dictSecs/60)+':'+(dictSecs%60).toString().padStart(2,'0');
+  },1000);
+  try{
+    recognition=new SR();
+    recognition.lang='es-BO';
+    recognition.continuous=true;
+    recognition.interimResults=true;
+    let finalTxt='';
+    recognition.onresult=e=>{
+      let interim='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const tr=e.results[i][0].transcript;
+        if(e.results[i].isFinal) finalTxt+=tr+' '; else interim+=tr;
+      }
+      liveTranscript=finalTxt;
+      if(ta) ta.value=finalTxt+(interim?('  … '+interim):'');
+    };
+    recognition.onerror=ev=>resetRecUiDesktop('Error de reconocimiento: '+ev.error,'var(--red)');
+    recognition.onend=()=>{ if(recState==='recording') resetRecUiDesktop('El reconocimiento se detuvo. Intenta de nuevo.','var(--amber)'); };
+    recognition.start();
+    srSt.textContent='Escuchando en es-BO...';
+    srSt.style.color='var(--teal)';
+  }catch(e){
+    resetRecUiDesktop('No se pudo iniciar: '+e.message,'var(--red)');
+  }
+};
+
+calcDas28 = function(){
+  const tenderEl=document.getElementById('d-tender');
+  const swollenEl=document.getElementById('d-swollen');
+  const vasEl=document.getElementById('d-vas');
+  const pcrEl=document.getElementById('d-pcr');
+  const valEl=document.getElementById('das-val');
+  const actEl=document.getElementById('das-act');
+  const pinEl=document.getElementById('das-pin');
+  const badgeEl=document.getElementById('das-badge');
+  if(!tenderEl || !swollenEl || !vasEl || !pcrEl || !valEl || !actEl || !pinEl || !badgeEl) return;
+  const t28=parseFloat(tenderEl.value)||0;
+  const s28=parseFloat(swollenEl.value)||0;
+  const vas=parseFloat(vasEl.value)||0;
+  const pcr=parseFloat(pcrEl.value)||0;
+  if(!t28&&!s28) return;
+  const score=0.56*Math.sqrt(t28)+0.28*Math.sqrt(s28)+0.36*Math.log(pcr+1)+0.014*vas+0.96;
+  const v=score.toFixed(2);
+  valEl.textContent=v;
+  const pct=Math.min(Math.max((score-1.5)/(8-1.5)*100,0),100).toFixed(1);
+  pinEl.style.left=pct+'%';
+  let label,cls;
+  if(score<2.6){label='Remisión';cls='remision';}else if(score<=3.2){label='Baja';cls='baja';}else if(score<=5.1){label='Moderada';cls='moderada';}else{label='Alta';cls='alta';}
+  actEl.textContent=label;
+  valEl.className='das-number '+cls;
+  badgeEl.textContent='DAS28: '+v;
+};
+
+(function bindDesktopMic(){
+  const micBtn=document.getElementById('micBtn');
+  const micZone=document.querySelector('.mic-zone');
+  if(micBtn){
+    micBtn.type='button';
+    micBtn.style.pointerEvents='auto';
+    micBtn.style.position='relative';
+    micBtn.style.zIndex='3';
+    micBtn.onclick=function(ev){
+      ev.preventDefault();
+      ev.stopPropagation();
+      toggleRec();
+    };
+  }
+  if(micZone){
+    micZone.style.position='relative';
+    micZone.style.zIndex='2';
+  }
+})();
+</script>
+</body>
+</html>
