@@ -100,6 +100,22 @@ body::before{
 .timer-pill.running .tp-dot{background:var(--red);animation:blink .9s ease-in-out infinite;}
 .tp-time{font-family:'Geist Mono',monospace;font-size:13px;font-weight:500;color:var(--g2);min-width:34px;}
 .timer-pill.running .tp-time{color:var(--red);}
+.header-specialty{
+  height: 30px;
+  max-width: 124px;
+  border: 1px solid rgba(125,235,209,.32);
+  border-radius: 999px;
+  padding: 0 24px 0 9px;
+  background: linear-gradient(180deg, rgba(16,35,35,.96), rgba(7,14,20,.98));
+  color: var(--teal-d);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  outline: none;
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.08);
+}
 
 /* COMPLETION FLAG */
 .flag{display:none;align-items:center;gap:5px;padding:4px 9px;border-radius:20px;font-size:11px;font-weight:500;margin-left:auto;}
@@ -121,6 +137,8 @@ body::before{
 .fmt-scroll::-webkit-scrollbar{display:none;}
 .fmt-chip{flex-shrink:0;border:1px solid var(--g6);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--g3);background:var(--white);cursor:pointer;transition:all .14s;white-space:nowrap;user-select:none;}
 .fmt-chip.active{background:var(--g);border-color:var(--g);color:#fff;font-weight:500;}
+.spec-chip{flex-shrink:0;border:1px solid var(--g6);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--g3);background:var(--white);cursor:pointer;transition:all .14s;white-space:nowrap;user-select:none;}
+.spec-chip.active{background:linear-gradient(180deg,var(--teal) 0%,var(--teal-d) 100%);border-color:var(--teal-m);color:#06110f;font-weight:700;box-shadow:0 10px 22px rgba(64,224,190,.16),inset 0 1px 0 rgba(255,255,255,.35);}
 
 /* MIC CARD */
 .mic-card{background:var(--white);border:1px solid var(--g6);border-radius:var(--r);padding:24px 16px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;}
@@ -275,7 +293,7 @@ body::before{
 .logo{letter-spacing:-.6px;}
 .logo-dot{box-shadow:0 0 0 6px rgba(125,235,209,.12),0 0 24px rgba(125,235,209,.38);}
 
-.timer-pill,.flag,.fmt-chip,.exp-opt,.modal-cancel{
+.timer-pill,.flag,.fmt-chip,.spec-chip,.exp-opt,.modal-cancel{
   border:1px solid var(--line);
   box-shadow:var(--btn-shadow);
 }
@@ -456,6 +474,18 @@ button[style*="background:var(--red)"]{
       <div class="tp-dot"></div>
       <div class="tp-time" id="tpTime">0:00</div>
     </div>
+    <select class="header-specialty" id="mSpecialtyHeader" onchange="setMobileSpecialty(this.value)" aria-label="Especialidad">
+      <option>Medicina interna</option>
+      <option>Cardiología</option>
+      <option selected>Reumatología</option>
+      <option>Cirugía oncológica</option>
+      <option>Medicina familiar</option>
+      <option>Pediatría</option>
+      <option>Ginecología y obstetricia</option>
+      <option>Neurología</option>
+      <option>Dermatología</option>
+      <option>Traumatología y ortopedia</option>
+    </select>
 
     <!-- Patient + completion flag -->
     <div class="pt-meta" style="margin-left:auto">
@@ -480,6 +510,23 @@ button[style*="background:var(--red)"]{
         </div>
       </div>
 
+      <!-- Specialty selector -->
+      <div>
+        <div class="fmt-label">Especialidad</div>
+        <div class="fmt-scroll">
+          <div class="spec-chip" onclick="selSpecialty(this,'Medicina interna')">Medicina interna</div>
+          <div class="spec-chip" onclick="selSpecialty(this,'Cardiología')">Cardiología</div>
+          <div class="spec-chip active" onclick="selSpecialty(this,'Reumatología')">Reumatología</div>
+          <div class="spec-chip" onclick="selSpecialty(this,'Cirugía oncológica')">Cirugía oncológica</div>
+          <div class="spec-chip" onclick="selSpecialty(this,'Medicina familiar')">Medicina familiar</div>
+          <div class="spec-chip" onclick="selSpecialty(this,'Pediatría')">Pediatría</div>
+          <div class="spec-chip" onclick="selSpecialty(this,'Ginecología y obstetricia')">Ginecología</div>
+          <div class="spec-chip" onclick="selSpecialty(this,'Neurología')">Neurología</div>
+          <div class="spec-chip" onclick="selSpecialty(this,'Dermatología')">Dermatología</div>
+          <div class="spec-chip" onclick="selSpecialty(this,'Traumatología y ortopedia')">Traumatología</div>
+        </div>
+      </div>
+
       <!-- Format chips -->
       <div>
         <div class="fmt-label">Formato de nota</div>
@@ -497,11 +544,14 @@ button[style*="background:var(--red)"]{
       <div id="apiCardM" style="background:var(--white);border:1px solid var(--g6);border-radius:var(--r);padding:12px;margin-top:4px">
         <div onclick="toggleApiMob()" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer">
           <span style="font-size:12px;font-weight:500;color:var(--g2)">⚙ API Gemini</span>
-          <span style="font-size:11px;color:var(--g4)" id="apiStatusM">No configurada — demo</span>
+          <span style="display:flex;align-items:center;gap:7px">
+            <span style="font-size:11px;color:var(--g4)" id="apiStatusM">No configurada — demo</span>
+            <button type="button" id="apiValidateBtnM" onclick="validateLoadedApiMobile(event)" style="border:1px solid var(--teal-m);background:linear-gradient(180deg,var(--teal) 0%,var(--teal-d) 100%);color:#06110f;border-radius:999px;padding:4px 10px;font-family:inherit;font-size:11px;font-weight:700;box-shadow:0 8px 18px rgba(64,224,190,.18),inset 0 1px 0 rgba(255,255,255,.35);cursor:pointer">Validar</button>
+          </span>
         </div>
         <div id="apiBodyM" style="display:none;margin-top:10px">
-          <input type="password" id="apiKeyInputM" placeholder="AIzaSy..." autocomplete="new-password" oninput="checkApiKeyM()" style="width:100%;background:var(--g8);border:1px solid var(--g6);border-radius:8px;padding:10px;color:var(--g);font-family:'Geist Mono',monospace;font-size:12px;outline:none">
-          <div style="font-size:10px;color:var(--g4);margin-top:6px;line-height:1.5">Gratis en <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--teal);text-decoration:none">aistudio.google.com/app/apikey</a>. Solo vive en esta sesión.</div>
+          <input type="password" id="apiKeyInputM" placeholder="AIzaSy..." autocomplete="new-password" oninput="markApiKeyReadyMobile()" style="width:100%;background:var(--g8);border:1px solid var(--g6);border-radius:8px;padding:10px;color:var(--g);font-family:'Geist Mono',monospace;font-size:12px;outline:none">
+          <div style="font-size:10px;color:var(--g4);margin-top:6px;line-height:1.5">Gratis en <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--teal);text-decoration:none">aistudio.google.com/app/apikey</a>. Para demo puede precargarse solo en este navegador; no se escribe en el HTML público.</div>
         </div>
       </div>
 
@@ -672,6 +722,7 @@ if(diag)   document.getElementById('ptDx').textContent   = diag + ' · ' + (para
 
 // ── FORMAT ──
 let currentFmt = 'control';
+let currentSpecialty = 'Reumatología';
 const fmtNames = {control:'nota de control',soap:'SOAP',hc:'historia clinica',eco:'nota de procedimiento',interconsulta:'interconsulta',libre:'nota libre'};
 
 const fmtSections = {
@@ -712,25 +763,61 @@ function selFmt(el, fmt){
   el.classList.add('active'); currentFmt = fmt;
 }
 
+function renderMobileDx(){
+  const diag=(document.getElementById('mDiag').value||'').split('(')[0].trim();
+  document.getElementById('ptDx').textContent=(diag||'—')+' · '+currentSpecialty+' · Control';
+}
+
+function setMobileSpecialty(value){
+  currentSpecialty=value||'Reumatología';
+  const header=document.getElementById('mSpecialtyHeader');
+  if(header) header.value=currentSpecialty;
+  document.querySelectorAll('.spec-chip').forEach(c=>{
+    const isActive=(c.textContent||'').trim()===currentSpecialty || c.getAttribute('onclick')?.includes("'"+currentSpecialty+"'");
+    c.classList.toggle('active', !!isActive);
+  });
+  renderMobileDx();
+  mobileSyncSendPatient();
+}
+
+function selSpecialty(el, specialty){
+  setMobileSpecialty(specialty);
+}
+
 // ── CONSULT TIMER ──
 let ctRunning=false, ctSecs=0, ctInt=null;
 
-function toggleTimer(){
-  if(!ctRunning){
-    ctRunning=true;
-    const start = Date.now() - ctSecs*1000;
-    ctInt = setInterval(()=>{
-      ctSecs = Math.floor((Date.now()-start)/1000);
-      const m=Math.floor(ctSecs/60), s=(ctSecs%60).toString().padStart(2,'0');
-      document.getElementById('tpTime').textContent = m+':'+s;
-    },500);
-    document.getElementById('timerPill').classList.add('running');
-  } else {
-    ctRunning=false; clearInterval(ctInt);
-    document.getElementById('timerPill').classList.remove('running');
-    showToast('Consulta: '+document.getElementById('tpTime').textContent);
-  }
+function renderTimer(){
+  const m=Math.floor(ctSecs/60), s=(ctSecs%60).toString().padStart(2,'0');
+  document.getElementById('tpTime').textContent=m+':'+s;
 }
+
+function startConsultTimerMobile(){
+  if(ctRunning) return;
+  ctRunning=true;
+  const start = Date.now() - ctSecs*1000;
+  clearInterval(ctInt);
+  ctInt = setInterval(()=>{
+    ctSecs = Math.floor((Date.now()-start)/1000);
+    renderTimer();
+  },500);
+  document.getElementById('timerPill').classList.add('running');
+}
+
+function pauseConsultTimerMobile(){
+  if(!ctRunning) return;
+  ctRunning=false;
+  clearInterval(ctInt);
+  document.getElementById('timerPill').classList.remove('running');
+  showToast('Consulta: '+document.getElementById('tpTime').textContent);
+}
+
+function toggleTimer(){
+  if(!ctRunning) startConsultTimerMobile();
+  else pauseConsultTimerMobile();
+}
+renderMobileDx();
+startConsultTimerMobile();
 
 // ── RECORDING ──
 let recState='idle', dictSecs=0, dictInt=null, recognition=null, transcript='';
@@ -792,7 +879,8 @@ function buildCtxMobile(){
   return {
     nombre: (nameEl&&nameEl.value) || document.getElementById('ptName').textContent || '',
     diag: (diagEl&&diagEl.value) || (document.getElementById('ptDx').textContent||'').split('·')[0].trim(),
-    visita: (document.getElementById('ptDx').textContent||'').split('·')[1]||'control'
+    especialidad: currentSpecialty,
+    visita: 'Control'
   };
 }
 
@@ -818,6 +906,7 @@ async function generateNoteMobile(transcriptTxt, fmt, apiKey){
     'Formato: '+(fmtDescs[fmt]||fmtDescs.libre),
     'Paciente: '+ctx.nombre,
     'Diagnostico: '+ctx.diag,
+    'Especialidad: '+ctx.especialidad,
     'Visita: '+ctx.visita,
     'Dictado: '+transcriptTxt
   ].join('\n');
@@ -953,6 +1042,13 @@ function setApiBadgeMobile(state, text, model){
     badge.textContent='Validando...';
     badge.style.display='flex';
     status.textContent='Validando...';
+    status.style.color='var(--amber)';
+    body.style.display='none';
+  }else if(state==='ready'){
+    badge.classList.add('is-pending');
+    badge.textContent='API lista';
+    badge.style.display='flex';
+    status.textContent=text || 'API precargada — validar';
     status.style.color='var(--amber)';
     body.style.display='none';
   }else{
@@ -1299,7 +1395,7 @@ function getMobileSoapPrintData(){
     birth:'',
     age:'',
     sex:'',
-    visit:(document.getElementById('ptDx').textContent||'').split('·')[1]||'Control',
+    visit:'Control',
     dx:dxText,
     dx2:'',
     date:now.toLocaleDateString('es-BO'),
@@ -1379,6 +1475,7 @@ function buildNoteURL(){
   const payload = {
     paciente: document.getElementById('ptName').textContent,
     dx: document.getElementById('ptDx').textContent,
+    especialidad: currentSpecialty,
     fmt: currentFmt,
     secs: sections,   // structured sections only — no raw transcript (C-5)
     ts: new Date().toISOString().slice(0,16)
@@ -1395,6 +1492,7 @@ function exportTranscriptCode(){
   const payload={
     paciente:document.getElementById('ptName').textContent,
     dx:document.getElementById('ptDx').textContent,
+    especialidad:currentSpecialty,
     fmt:currentFmt,
     transcript:txt,
     ts:new Date().toISOString().slice(0,16)
@@ -1539,8 +1637,7 @@ function cie10Pick(inputId,listId,code,desc){
   showToast(code+' — '+desc);
 }
 function syncDx(){
-  const diag=(document.getElementById('mDiag').value||'').split('(')[0].trim();
-  document.getElementById('ptDx').textContent=(diag||'—')+' · Control';
+  renderMobileDx();
 }
 
 // C-3: validateApiKeyFastMobile uses header, not URL param
@@ -1564,10 +1661,66 @@ checkApiKeyM = function(){
   const k=document.getElementById('apiKeyInputM').value.trim();
   if(!k){ setApiBadgeMobile('idle'); return; }
   if(!k.startsWith('AIza')){ setApiBadgeMobile('error','Formato inválido'); return; }
-  setApiBadgeMobile('pending');
   clearTimeout(apiValidTimerM);
-  apiValidTimerM=setTimeout(()=>validateGeminiKeyM(k), 350);
+  setApiBadgeMobile('ready','API cargada — validar');
 };
+
+function markApiKeyReadyMobile(){
+  const input=document.getElementById('apiKeyInputM');
+  const key=(input && input.value ? input.value : '').trim();
+  if(!key){ setApiBadgeMobile('idle'); return; }
+  if(!key.startsWith('AIza')){ setApiBadgeMobile('error','Formato inválido'); return; }
+  try{
+    sessionStorage.setItem('drnoteai_gemini_api_key', key);
+    localStorage.setItem('drnoteai_gemini_api_key', key);
+  }catch(_){}
+  setApiBadgeMobile('ready','API cargada — validar');
+}
+
+function readPreloadedApiKeyMobile(){
+  let key='';
+  try{
+    const qs=new URLSearchParams(location.search||'');
+    const hs=new URLSearchParams((location.hash||'').replace(/^#/,''));
+    key=qs.get('demo_key') || qs.get('gemini_key') || hs.get('demo_key') || hs.get('gemini_key') || '';
+    if(key && key.startsWith('AIza')){
+      sessionStorage.setItem('drnoteai_gemini_api_key', key);
+      localStorage.setItem('drnoteai_gemini_api_key', key);
+      qs.delete('demo_key'); qs.delete('gemini_key');
+      hs.delete('demo_key'); hs.delete('gemini_key');
+      const cleanQuery=qs.toString();
+      const cleanHash=hs.toString();
+      const cleanUrl=location.pathname+(cleanQuery ? '?'+cleanQuery : '')+(cleanHash ? '#'+cleanHash : '');
+      history.replaceState(null,'',cleanUrl);
+    }
+    if(!key) key=sessionStorage.getItem('drnoteai_gemini_api_key') || localStorage.getItem('drnoteai_gemini_api_key') || '';
+  }catch(_){}
+  return (key||'').trim();
+}
+
+function validateLoadedApiMobile(ev){
+  if(ev){ ev.preventDefault(); ev.stopPropagation(); }
+  const input=document.getElementById('apiKeyInputM');
+  const body=document.getElementById('apiBodyM');
+  const key=(input && input.value ? input.value : readPreloadedApiKeyMobile()).trim();
+  if(input && key) input.value=key;
+  if(!key){
+    setApiBadgeMobile('error','Carga una API key');
+    if(body) body.style.display='block';
+    return;
+  }
+  if(!key.startsWith('AIza')){
+    setApiBadgeMobile('error','Formato inválido');
+    if(body) body.style.display='block';
+    return;
+  }
+  try{
+    sessionStorage.setItem('drnoteai_gemini_api_key', key);
+    localStorage.setItem('drnoteai_gemini_api_key', key);
+  }catch(_){}
+  setApiBadgeMobile('pending');
+  validateGeminiKeyM(key);
+}
 
 validateGeminiKeyM = async function(k){
   try{
@@ -1738,7 +1891,8 @@ function mobileSyncSendPatient(){
   const dxEl=document.getElementById('mDiag');
   mobileSyncSend('patient',{
     patient:(nameEl&&nameEl.value)||document.getElementById('ptName').textContent||'',
-    dx:(dxEl&&dxEl.value)||document.getElementById('ptDx').textContent||''
+    dx:(dxEl&&dxEl.value)||document.getElementById('ptDx').textContent||'',
+    specialty:currentSpecialty
   });
 }
 
@@ -1755,6 +1909,15 @@ function mobileSyncSendPatient(){
     else if(recState==='recording') mobileSyncSend('state',{state:'stopping'});
     oldToggle();
   };
+})();
+
+(function initPreloadedGeminiApiMobile(){
+  const input=document.getElementById('apiKeyInputM');
+  const key=readPreloadedApiKeyMobile();
+  if(input && key){
+    input.value=key;
+    setApiBadgeMobile('ready','API precargada — validar');
+  }
 })();
 
 (function initMobileSyncFromQr(){

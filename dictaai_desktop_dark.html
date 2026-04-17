@@ -38,6 +38,24 @@ header { background: var(--white); border-bottom: 1px solid var(--g6); height: 4
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
 .patient-tag { background: var(--g7); border: 1px solid var(--g6); border-radius: 20px; padding: 3px 10px 3px 7px; font-size: 12px; color: var(--g2); display: flex; align-items: center; gap: 7px; }
 .av { width: 20px; height: 20px; background: var(--teal); color: #fff; border-radius: 50%; font-size: 9px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+.specialty-select {
+  height: 31px;
+  max-width: 190px;
+  border: 1px solid rgba(125,235,209,.28);
+  border-radius: 999px;
+  padding: 0 30px 0 12px;
+  background: linear-gradient(180deg, rgba(16,35,35,.95), rgba(7,14,20,.98));
+  color: var(--teal-d);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  outline: none;
+  cursor: pointer;
+  box-shadow: 0 14px 28px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.08);
+}
+.specialty-select:hover { border-color: rgba(125,235,209,.5); }
 .api-ok-badge { display: none; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; }
 .api-ok-badge.is-ok { color: var(--teal-d); background: var(--teal-l); border: 1px solid var(--teal-m); }
 .api-ok-badge.is-error { color: #ffc6c2; background: var(--red-l); border: 1px solid var(--red-m); }
@@ -883,6 +901,18 @@ button[style*="background: var(--teal)"] {
     <div class="ct-time" id="ctTime">0:00</div>
     <div class="ct-label" id="ctLabel">Iniciar consulta</div>
   </div>
+  <select class="specialty-select" id="h-especialidad" onchange="setDesktopSpecialty(this.value)" aria-label="Especialidad">
+    <option>Medicina interna</option>
+    <option>Cardiología</option>
+    <option selected>Reumatología</option>
+    <option>Cirugía oncológica</option>
+    <option>Medicina familiar</option>
+    <option>Pediatría</option>
+    <option>Ginecología y obstetricia</option>
+    <option>Neurología</option>
+    <option>Dermatología</option>
+    <option>Traumatología y ortopedia</option>
+  </select>
 
   <div class="hright">
     <!-- Completion flag -->
@@ -920,8 +950,9 @@ button[style*="background: var(--teal)"] {
         <div class="fl"><label>Fecha de nacimiento</label><input type="date" id="f-fnac" value="1971-03-15" onchange="updateCompletion()"></div>
         <div class="fl"><label>Sexo</label><select id="f-sexo" onchange="updateCompletion()"><option value="F">Femenino</option><option value="M" selected>Masculino</option></select></div>
         <div class="fl"><label>N° de expediente</label><input type="text" id="f-exp" class="mono" value="0042" oninput="updateCompletion()"></div>
-        <div class="fl"><label>Tipo de visita</label><select id="f-visita" onchange="updateCompletion()"><option value="control" selected>Control</option><option value="primera">Primera visita</option><option value="flare">Reagudización</option><option value="procedimiento">Procedimiento</option></select></div>
-        <div class="fl fspan2" style="position:relative"><label>Diagnóstico principal <span style="color:var(--g4);text-transform:none;letter-spacing:0">(CIE-10)</span></label><input type="text" id="f-diag" value="Artritis Reumatoide (M05.9)" autocomplete="off" oninput="cie10Suggest(this,'cie10-list-1');updateCompletion()" onfocus="cie10Suggest(this,'cie10-list-1')" onblur="setTimeout(()=>document.getElementById('cie10-list-1').style.display='none',200)"><div id="cie10-list-1" class="cie10-list"></div></div>
+        <div class="fl"><label>Tipo de visita</label><select id="f-visita" onchange="syncCtx();updateCompletion()"><option value="control" selected>Control</option><option value="primera">Primera visita</option><option value="flare">Reagudización</option><option value="procedimiento">Procedimiento</option></select></div>
+        <div class="fl"><label>Especialidad</label><select id="f-especialidad" onchange="setDesktopSpecialty(this.value)"><option>Medicina interna</option><option>Cardiología</option><option selected>Reumatología</option><option>Cirugía oncológica</option><option>Medicina familiar</option><option>Pediatría</option><option>Ginecología y obstetricia</option><option>Neurología</option><option>Dermatología</option><option>Traumatología y ortopedia</option></select></div>
+        <div class="fl fspan2" style="position:relative"><label>Diagnóstico principal <span style="color:var(--g4);text-transform:none;letter-spacing:0">(CIE-10)</span></label><input type="text" id="f-diag" value="Artritis Reumatoide (M05.9)" autocomplete="off" oninput="cie10Suggest(this,'cie10-list-1');syncCtx();updateCompletion()" onfocus="cie10Suggest(this,'cie10-list-1')" onblur="setTimeout(()=>document.getElementById('cie10-list-1').style.display='none',200)"><div id="cie10-list-1" class="cie10-list"></div></div>
         <div class="fl fspan2" style="position:relative"><label>Diagnósticos secundarios <span style="color:var(--g4);text-transform:none;letter-spacing:0">(CIE-10)</span></label><input type="text" id="f-diag2" placeholder="Ej: HTA, DM2, Osteoporosis..." autocomplete="off" oninput="cie10Suggest(this,'cie10-list-2')" onfocus="cie10Suggest(this,'cie10-list-2')" onblur="setTimeout(()=>document.getElementById('cie10-list-2').style.display='none',200)"><div id="cie10-list-2" class="cie10-list"></div></div>
         <div class="fl fspan2">
           <label>Motivo de consulta</label>
@@ -1071,14 +1102,17 @@ button[style*="background: var(--teal)"] {
     <div class="api-sec" id="apiSec">
       <div class="api-head" onclick="toggleApi()">
         <span style="font-weight:500;color:var(--g2);font-size:12px">⚙ Configuración API</span>
-        <span style="color:var(--g4);font-size:11px" id="apiStatus">No configurada — usando demo</span>
+        <span style="display:flex;align-items:center;gap:8px">
+          <span style="color:var(--g4);font-size:11px" id="apiStatus">No configurada — usando demo</span>
+          <button type="button" id="apiValidateBtn" onclick="validateLoadedApiDesktop(event)" style="border:1px solid var(--teal-m);background:linear-gradient(180deg,var(--teal) 0%,var(--teal-d) 100%);color:#06110f;border-radius:999px;padding:4px 11px;font-family:inherit;font-size:11px;font-weight:700;box-shadow:0 8px 18px rgba(64,224,190,.18),inset 0 1px 0 rgba(255,255,255,.35);cursor:pointer">Validar</button>
+        </span>
       </div>
       <div class="api-body" id="apiBody">
         <div class="fl">
           <label>API Key de Google Gemini (gratuita)</label>
-          <input type="password" id="apiKeyInput" placeholder="AIzaSy..." style="font-family:'Geist Mono',monospace;font-size:12px" oninput="checkApiKey()" autocomplete="new-password">
+          <input type="password" id="apiKeyInput" placeholder="AIzaSy..." style="font-family:'Geist Mono',monospace;font-size:12px" oninput="markApiKeyReadyDesktop()" autocomplete="new-password">
         </div>
-        <div style="font-size:11px;color:var(--g4);margin-top:6px;line-height:1.5">Obtén tu key gratis en <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--teal);text-decoration:none">aistudio.google.com/app/apikey</a>. La key no se guarda en ningún servidor, solo vive en esta sesión.</div>
+        <div style="font-size:11px;color:var(--g4);margin-top:6px;line-height:1.5">Obtén tu key gratis en <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--teal);text-decoration:none">aistudio.google.com/app/apikey</a>. Para demo puede precargarse solo en este navegador; no se escribe en el HTML público.</div>
       </div>
     </div>
 
@@ -1345,14 +1379,33 @@ function syncHeader(){
   document.getElementById('ptName').textContent=n||'Paciente';
   const nameEl=document.getElementById('ctx-name');
   if(nameEl) nameEl.textContent=n||'Paciente';
+  syncCtx();
+}
+
+function setSelectByText(selectEl, value){
+  if(!selectEl) return;
+  const opt=Array.from(selectEl.options).find(o=>o.value===value || o.text===value);
+  if(opt) selectEl.value=opt.value || opt.text;
+}
+
+function setDesktopSpecialty(value){
+  const specialty=value||'Reumatología';
+  setSelectByText(document.getElementById('f-especialidad'), specialty);
+  setSelectByText(document.getElementById('h-especialidad'), specialty);
+  syncCtx();
+  updateCompletion();
 }
 
 function syncCtx(){
   const n=document.getElementById('f-nombre').value||'Paciente';
   const d=document.getElementById('f-diag').value||'—';
   const v=document.getElementById('f-visita');
+  const e=document.getElementById('f-especialidad');
+  const specialty=e ? e.options[e.selectedIndex].text : 'Reumatología';
   document.getElementById('ctx-name').textContent=n;
-  document.getElementById('ctx-diag').textContent=d.split('(')[0].trim()+' · '+v.options[v.selectedIndex].text;
+  document.getElementById('ctx-diag').textContent=d.split('(')[0].trim()+' · '+specialty+' · '+v.options[v.selectedIndex].text;
+  const meta=document.getElementById('ptMeta');
+  if(meta) meta.textContent='M 54a · '+specialty;
 }
 
 // ── COMPLETION SCORE (datos) ──
@@ -1378,27 +1431,43 @@ function updateCompletion(){
   else { flag.className='completion-flag complete'; }
 }
 updateCompletion();
+syncCtx();
 
 // ── CONSULT TIMER ──
 let ctRunning=false, ctSecs=0, ctStart=null, ctInt=null;
 
-function toggleConsultTimer(){
-  if(!ctRunning){
-    ctRunning=true; ctStart=Date.now()-ctSecs*1000;
-    ctInt=setInterval(()=>{
-      ctSecs=Math.floor((Date.now()-ctStart)/1000);
-      const m=Math.floor(ctSecs/60), s=(ctSecs%60).toString().padStart(2,'0');
-      document.getElementById('ctTime').textContent=m+':'+s;
-    },500);
-    document.getElementById('consultTimer').classList.add('running');
-    document.getElementById('ctLabel').textContent='En consulta';
-  } else {
-    ctRunning=false; clearInterval(ctInt);
-    document.getElementById('consultTimer').classList.remove('running');
-    document.getElementById('ctLabel').textContent='Pausado';
-    document.getElementById('metricDuration').textContent=document.getElementById('ctTime').textContent;
-  }
+function renderConsultTimer(){
+  const m=Math.floor(ctSecs/60), s=(ctSecs%60).toString().padStart(2,'0');
+  document.getElementById('ctTime').textContent=m+':'+s;
 }
+
+function startConsultTimer(){
+  if(ctRunning) return;
+  ctRunning=true;
+  ctStart=Date.now()-ctSecs*1000;
+  clearInterval(ctInt);
+  ctInt=setInterval(()=>{
+    ctSecs=Math.floor((Date.now()-ctStart)/1000);
+    renderConsultTimer();
+  },500);
+  document.getElementById('consultTimer').classList.add('running');
+  document.getElementById('ctLabel').textContent='En consulta';
+}
+
+function pauseConsultTimer(){
+  if(!ctRunning) return;
+  ctRunning=false;
+  clearInterval(ctInt);
+  document.getElementById('consultTimer').classList.remove('running');
+  document.getElementById('ctLabel').textContent='Pausado';
+  document.getElementById('metricDuration').textContent=document.getElementById('ctTime').textContent;
+}
+
+function toggleConsultTimer(){
+  if(!ctRunning) startConsultTimer();
+  else pauseConsultTimer();
+}
+startConsultTimer();
 
 // ── API CONFIG ──
 function toggleApi(){ document.getElementById('apiBody').classList.toggle('open'); }
@@ -1596,6 +1665,13 @@ function setApiBadgeDesktop(state, text, model){
     status.textContent='Validando key...';
     status.style.color='var(--amber)';
     body.classList.remove('open');
+  }else if(state==='ready'){
+    badge.classList.add('is-pending');
+    badge.textContent='API lista';
+    badge.style.display='inline-flex';
+    status.textContent=text || 'API precargada — validar';
+    status.style.color='var(--amber)';
+    body.classList.remove('open');
   }else{
     badge.style.display='none';
     status.textContent='No configurada — usando demo';
@@ -1611,9 +1687,7 @@ function checkApiKey(){
   const k=document.getElementById('apiKeyInput').value.trim();
   if(!k){ setApiBadgeDesktop('idle'); return; }
   if(!k.startsWith('AIza')){ setApiBadgeDesktop('error','Formato inválido'); return; }
-  setApiBadgeDesktop('pending');
-  clearTimeout(apiValidTimer);
-  apiValidTimer=setTimeout(()=>validateGeminiKey(k),500);
+  setApiBadgeDesktop('ready','API cargada — validar');
 }
 async function validateGeminiKey(k){
   let lastErr='Sin respuesta';
@@ -1647,7 +1721,7 @@ function showApiError(msg){
 function buildContext(){
   const g=id=>{ const e=document.getElementById(id); return e?e.value:''; };
   const dasEl=document.getElementById('das-val');
-  return { nombre:g('f-nombre'),diag:g('f-diag'),visita:g('f-visita'),motivo:g('f-motivo'), pas:g('f-pas'),pad:g('f-pad'),fc:g('f-fc'),temp:g('f-temp'), pcr:g('l-pcr'),vsg:g('l-vsg'),hb:g('l-hb'),tgo:g('l-tgo'),tgp:g('l-tgp'),creat:g('l-creat'), fr:g('l-fr'),anticcp:g('l-anticcp'),das:dasEl?dasEl.textContent:'',notas:g('f-notas') };
+  return { nombre:g('f-nombre'),diag:g('f-diag'),visita:g('f-visita'),especialidad:g('f-especialidad'),motivo:g('f-motivo'), pas:g('f-pas'),pad:g('f-pad'),fc:g('f-fc'),temp:g('f-temp'), pcr:g('l-pcr'),vsg:g('l-vsg'),hb:g('l-hb'),tgo:g('l-tgo'),tgp:g('l-tgp'),creat:g('l-creat'), fr:g('l-fr'),anticcp:g('l-anticcp'),das:dasEl?dasEl.textContent:'',notas:g('f-notas') };
 }
 
 async function generateNote(ctx, transcript, fmt, apiKey){
@@ -1679,6 +1753,7 @@ async function generateNote(ctx, transcript, fmt, apiKey){
     'Formato: '+(fmtDescs[fmt]||fmtDescs.libre),
     'Paciente: '+(ctx.nombre||'No especificado'),
     'Diagnostico: '+(ctx.diag||'No especificado'),
+    'Especialidad: '+(ctx.especialidad||'Reumatología'),
     'Visita: '+(ctx.visita||'control'),
     ctx.motivo ? 'Motivo: '+ctx.motivo : null,
     vitalsTxt ? 'Signos vitales: '+vitalsTxt : null,
@@ -2369,7 +2444,7 @@ function cie10Pick(inputId, listId, code, desc){
   if(typeof updateCompletion==='function') updateCompletion();
   // Actualizar contexto header
   const ctxDiag = document.getElementById('ctx-diag');
-  if(ctxDiag && inputId==='f-diag'){ ctxDiag.textContent = desc + ' · Control'; }
+  if(ctxDiag && inputId==='f-diag' && typeof syncCtx==='function') syncCtx();
   showToast(code+' — '+desc);
 }
 
@@ -2446,10 +2521,66 @@ checkApiKey = function(){
   const k=document.getElementById('apiKeyInput').value.trim();
   if(!k){ setApiBadgeDesktop('idle'); return; }
   if(!k.startsWith('AIza')){ setApiBadgeDesktop('error','Formato inválido'); return; }
-  setApiBadgeDesktop('pending');
   clearTimeout(apiValidTimer);
-  apiValidTimer=setTimeout(()=>validateGeminiKey(k), 350);
+  setApiBadgeDesktop('ready','API cargada — validar');
 };
+
+function markApiKeyReadyDesktop(){
+  const input=document.getElementById('apiKeyInput');
+  const key=(input && input.value ? input.value : '').trim();
+  if(!key){ setApiBadgeDesktop('idle'); return; }
+  if(!key.startsWith('AIza')){ setApiBadgeDesktop('error','Formato inválido'); return; }
+  try{
+    sessionStorage.setItem('drnoteai_gemini_api_key', key);
+    localStorage.setItem('drnoteai_gemini_api_key', key);
+  }catch(_){}
+  setApiBadgeDesktop('ready','API cargada — validar');
+}
+
+function readPreloadedApiKeyDesktop(){
+  let key='';
+  try{
+    const qs=new URLSearchParams(location.search||'');
+    const hs=new URLSearchParams((location.hash||'').replace(/^#/,''));
+    key=qs.get('demo_key') || qs.get('gemini_key') || hs.get('demo_key') || hs.get('gemini_key') || '';
+    if(key && key.startsWith('AIza')){
+      sessionStorage.setItem('drnoteai_gemini_api_key', key);
+      localStorage.setItem('drnoteai_gemini_api_key', key);
+      qs.delete('demo_key'); qs.delete('gemini_key');
+      hs.delete('demo_key'); hs.delete('gemini_key');
+      const cleanQuery=qs.toString();
+      const cleanHash=hs.toString();
+      const cleanUrl=location.pathname+(cleanQuery ? '?'+cleanQuery : '')+(cleanHash ? '#'+cleanHash : '');
+      history.replaceState(null,'',cleanUrl);
+    }
+    if(!key) key=sessionStorage.getItem('drnoteai_gemini_api_key') || localStorage.getItem('drnoteai_gemini_api_key') || '';
+  }catch(_){}
+  return (key||'').trim();
+}
+
+function validateLoadedApiDesktop(ev){
+  if(ev){ ev.preventDefault(); ev.stopPropagation(); }
+  const input=document.getElementById('apiKeyInput');
+  const body=document.getElementById('apiBody');
+  const key=(input && input.value ? input.value : readPreloadedApiKeyDesktop()).trim();
+  if(input && key) input.value=key;
+  if(!key){
+    setApiBadgeDesktop('error','Carga una API key');
+    if(body) body.classList.add('open');
+    return;
+  }
+  if(!key.startsWith('AIza')){
+    setApiBadgeDesktop('error','Formato inválido');
+    if(body) body.classList.add('open');
+    return;
+  }
+  try{
+    sessionStorage.setItem('drnoteai_gemini_api_key', key);
+    localStorage.setItem('drnoteai_gemini_api_key', key);
+  }catch(_){}
+  setApiBadgeDesktop('pending');
+  validateGeminiKey(key);
+}
 
 validateGeminiKey = async function(k){
   try{
@@ -2680,8 +2811,13 @@ function handleDesktopSyncMessage(msg){
   if(msg.type==='patient'){
     const nameEl=document.getElementById('f-nombre');
     const dxEl=document.getElementById('f-diag');
+    const specialtyEl=document.getElementById('f-especialidad');
     if(nameEl && msg.patient){ nameEl.value=msg.patient; syncHeader(); }
+    if(specialtyEl && msg.specialty){
+      setDesktopSpecialty(msg.specialty);
+    }
     if(dxEl && msg.dx){ dxEl.value=msg.dx; syncCtx(); }
+    else syncCtx();
   }
   if(msg.type==='state'){
     const sr=document.getElementById('srStatus');
@@ -2741,6 +2877,15 @@ function markDesktopSyncRecording(){
   if(micZone){
     micZone.style.position='relative';
     micZone.style.zIndex='2';
+  }
+})();
+
+(function initPreloadedGeminiApiDesktop(){
+  const input=document.getElementById('apiKeyInput');
+  const key=readPreloadedApiKeyDesktop();
+  if(input && key){
+    input.value=key;
+    setApiBadgeDesktop('ready','API precargada — validar');
   }
 })();
 </script>
