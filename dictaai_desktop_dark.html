@@ -485,12 +485,56 @@ header { background: var(--white); border-bottom: 1px solid var(--g6); height: 4
 .rx-st { font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 500; }
 .st-same { background: var(--teal-l); color: var(--teal-d); }
 .st-mod { background: var(--amber-l); color: var(--amber); }
+.st-alert { background: var(--red-l); color: #ffc6c2; border: 1px solid var(--red-m); }
 .add-btn { width: 100%; border: 1px dashed var(--g5); background: transparent; border-radius: var(--r); padding: 9px; font-family: inherit; font-size: 12px; color: var(--g4); cursor: pointer; transition: all .13s; }
 .add-btn:hover { border-color: var(--g3); color: var(--g3); background: var(--white); }
 .print-bar { background: var(--g); border-radius: var(--r); padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; }
 .print-info .pt { font-size: 13px; font-weight: 500; color: #fff; margin-bottom: 2px; }
 .print-info .ps { font-size: 11px; color: var(--g4); }
 .print-btns { display: flex; gap: 8px; }
+
+.allergy-modal-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.68);
+  padding: 24px;
+}
+.allergy-modal-bg.show { display: flex; }
+.allergy-modal {
+  width: min(520px, 94vw);
+  border: 1px solid rgba(255,130,120,.42);
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(84,24,24,.98), rgba(31,10,12,.99));
+  box-shadow: 0 30px 80px rgba(0,0,0,.52), inset 0 1px 0 rgba(255,255,255,.08);
+  padding: 20px;
+  color: #fff;
+}
+.allergy-modal h3 { margin: 0 0 8px; color: #ffe1de; font-size: 18px; letter-spacing: -.2px; }
+.allergy-modal p { color: #ffd0ca; font-size: 14px; line-height: 1.55; margin: 0 0 14px; }
+.allergy-box {
+  border: 1px solid rgba(255,180,173,.32);
+  border-radius: 14px;
+  background: rgba(255,255,255,.06);
+  padding: 12px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: #ffe7e4;
+}
+.allergy-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+.allergy-actions button {
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.16);
+  padding: 10px 16px;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.allergy-actions .no { background: linear-gradient(180deg,#f4f8ff 0%,#bcc9dc 100%); color: #111827; }
+.allergy-actions .proceed { background: linear-gradient(180deg,#ff9b92 0%,#da5d54 58%,#8f271f 100%); color: #fff; border-color: rgba(255,180,173,.38); }
 
 /* BUTTONS */
 .btn { border: none; border-radius: 6px; font-family: inherit; font-size: 12px; font-weight: 500; cursor: pointer; padding: 8px 16px; transition: all .13s; display: flex; align-items: center; gap: 5px; }
@@ -827,10 +871,10 @@ button[style*="background: var(--teal)"] {
   <div class="logo"><div class="logo-pulse"></div>DrNoteAI</div>
 
   <div class="patient-tag">
-    <div class="av" id="ptAv">MG</div>
-    <span id="ptName">María Elena Gutiérrez</span>
+    <div class="av" id="ptAv">CG</div>
+    <span id="ptName">Carlos Alberto Gutiérrez</span>
     <span style="color:var(--g5)">·</span>
-    <span style="color:var(--g4)" id="ptMeta">F 54a · AR</span>
+    <span style="color:var(--g4)" id="ptMeta">M 54a · AR</span>
   </div>
 
   <!-- Consult timer -->
@@ -872,9 +916,9 @@ button[style*="background: var(--teal)"] {
     </div>
     <div class="fsec-body">
       <div class="fg2">
-        <div class="fl fspan2"><label>Nombre completo</label><input type="text" id="f-nombre" value="María Elena Gutiérrez" oninput="syncHeader();updateCompletion()" autocomplete="off"></div>
+        <div class="fl fspan2"><label>Nombre completo</label><input type="text" id="f-nombre" value="Carlos Alberto Gutiérrez" oninput="syncHeader();updateCompletion()" autocomplete="off"></div>
         <div class="fl"><label>Fecha de nacimiento</label><input type="date" id="f-fnac" value="1971-03-15" onchange="updateCompletion()"></div>
-        <div class="fl"><label>Sexo</label><select id="f-sexo" onchange="updateCompletion()"><option value="F" selected>Femenino</option><option value="M">Masculino</option></select></div>
+        <div class="fl"><label>Sexo</label><select id="f-sexo" onchange="updateCompletion()"><option value="F">Femenino</option><option value="M" selected>Masculino</option></select></div>
         <div class="fl"><label>N° de expediente</label><input type="text" id="f-exp" class="mono" value="0042" oninput="updateCompletion()"></div>
         <div class="fl"><label>Tipo de visita</label><select id="f-visita" onchange="updateCompletion()"><option value="control" selected>Control</option><option value="primera">Primera visita</option><option value="flare">Reagudización</option><option value="procedimiento">Procedimiento</option></select></div>
         <div class="fl fspan2" style="position:relative"><label>Diagnóstico principal <span style="color:var(--g4);text-transform:none;letter-spacing:0">(CIE-10)</span></label><input type="text" id="f-diag" value="Artritis Reumatoide (M05.9)" autocomplete="off" oninput="cie10Suggest(this,'cie10-list-1');updateCompletion()" onfocus="cie10Suggest(this,'cie10-list-1')" onblur="setTimeout(()=>document.getElementById('cie10-list-1').style.display='none',200)"><div id="cie10-list-1" class="cie10-list"></div></div>
@@ -902,7 +946,7 @@ button[style*="background: var(--teal)"] {
       <p class="sec-micro">Hábitos y alergias</p>
       <div class="fg2">
         <div class="fl"><label>Tabaco</label><select id="f-tabaco"><option value="">—</option><option value="no">No fumador</option><option value="ex">Ex-fumador</option><option value="si">Fumador activo</option></select></div>
-        <div class="fl"><label>Alergias</label><input type="text" id="f-alergias" placeholder="AINE, penicilina..."></div>
+        <div class="fl"><label>Alergias</label><input type="text" id="f-alergias" value="Penicilina y derivados" placeholder="AINE, penicilina..."></div>
       </div>
     </div>
   </div>
@@ -1017,7 +1061,7 @@ button[style*="background: var(--teal)"] {
 
     <div class="ctx-pill">
       <div class="ctx-dot"></div>
-      <strong id="ctx-name" style="color:var(--g2)">María Elena Gutiérrez</strong>
+      <strong id="ctx-name" style="color:var(--g2)">Carlos Alberto Gutiérrez</strong>
       &nbsp;·&nbsp;<span id="ctx-diag" style="color:var(--g3)">AR · Control</span>
     </div>
 
@@ -1156,16 +1200,16 @@ button[style*="background: var(--teal)"] {
 <div class="rx-wrap">
   <div class="rx-card">
     <div class="rx-head"><span class="rx-title">Renovación de receta</span><span class="rx-ct">3 medicamentos</span></div>
-    <div class="rx-row"><input type="checkbox" class="rx-check" checked><div class="rx-info"><div class="rx-drug">Metotrexate</div><div class="rx-dose">15 mg — 1× semana (lunes)</div></div><span class="rx-st st-same">Sin cambio</span></div>
+    <div class="rx-row"><input type="checkbox" class="rx-check" checked><div class="rx-info"><div class="rx-drug">Metotrexate</div><div class="rx-dose">7.5 mg — 1 tab sábado y 1 tab domingo antes de dormir</div></div><span class="rx-st st-same">Sin cambio</span></div>
     <div class="rx-row"><input type="checkbox" class="rx-check" checked><div class="rx-info"><div class="rx-drug">Ácido fólico</div><div class="rx-dose">5 mg — 1× semana (jueves)</div></div><span class="rx-st st-same">Sin cambio</span></div>
-    <div class="rx-row"><input type="checkbox" class="rx-check" checked><div class="rx-info"><div class="rx-drug">Naproxeno</div><div class="rx-dose">500 mg — c/12h PRN</div></div><span class="rx-st st-mod">PRN añadido</span></div>
+    <div class="rx-row"><input type="checkbox" class="rx-check" checked><div class="rx-info"><div class="rx-drug">Amoxicilina</div><div class="rx-dose">500 mg — c/8h por 7 días</div></div><span class="rx-st st-alert">ALERTA alergia</span></div>
   </div>
   <button class="add-btn">+ Agregar medicamento</button>
   <div class="print-bar">
     <div class="print-info"><div class="pt">Listo para imprimir</div><div class="ps">Nota clínica · Receta · Indicaciones</div></div>
     <div class="print-btns">
-      <button class="btn btn-dark-inv" onclick="window.print()">Solo receta</button>
-      <button class="btn btn-inv" onclick="printDraft()">Imprimir todo</button>
+      <button class="btn btn-dark-inv" onclick="printPrescriptionWithAllergyCheck('rx')">Imprimir receta</button>
+      <button class="btn btn-inv" onclick="printPrescriptionWithAllergyCheck('all')">Imprimir todo</button>
     </div>
   </div>
 </div>
@@ -1184,6 +1228,24 @@ button[style*="background: var(--teal)"] {
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
+
+<!-- Allergy Safety Modal -->
+<div class="allergy-modal-bg" id="allergyModal" onclick="if(event.target===this)closeAllergyModal()">
+  <div class="allergy-modal">
+    <h3>⚠ Alerta de alergia medicamentosa</h3>
+    <p>Este paciente tiene alergia documentada a penicilina y derivados. La receta contiene amoxicilina.</p>
+    <div class="allergy-box">
+      <strong>Paciente:</strong> <span id="allergyPatientName">—</span><br>
+      <strong>Alergia registrada:</strong> <span id="allergyPatientText">Penicilina y derivados</span><br>
+      <strong>Medicamento en receta:</strong> Amoxicilina
+    </div>
+    <p>¿Desea continuar?</p>
+    <div class="allergy-actions">
+      <button class="no" onclick="closeAllergyModal()">No</button>
+      <button class="proceed" onclick="proceedPrescriptionPrint()">Proceder de todos modos</button>
+    </div>
+  </div>
+</div>
 
 <!-- Sync Modal -->
 <div class="sync-modal-bg" id="syncModalD" onclick="if(event.target===this)closeDesktopSyncModal()">
@@ -1220,7 +1282,14 @@ button[style*="background: var(--teal)"] {
 
 <script>
 // ── DOCTOR NAME ──
-const DOCTOR_NAME = 'Dr. L. Montoya';
+const DOCTOR_NAME = 'Dr. Luis Carlos Rodriguez Delgado';
+const PRESCRIBER_INFO = {
+  name: DOCTOR_NAME,
+  license: 'CP-1234567',
+  institution: 'Universidad Autónoma de México',
+  address: 'Av. Tamaulipas 150, Consultorio 402, Col. Condesa, Cuauhtémoc, 06140 Ciudad de México, CDMX',
+  phone: '+52 55 5555 0123'
+};
 
 // ── TABS ──
 const tabs = document.querySelectorAll('.tab');
@@ -1382,7 +1451,7 @@ const fmtSections={
     {l:'EV',n:'Evolución clínica',key:'evolucion',required:['síntomas','dolor','rigidez'],txt:'Paciente refiere mejoría parcial del dolor articular en manos y muñecas bilaterales. Rigidez matutina de ~30 minutos. Buena tolerancia al metotrexate. Cumplimiento adecuado.'},
     {l:'EF',n:'Examen físico',key:'examen',required:['PA','FC','articulaciones'],txt:'PA 128/82 · FC 74 · T 36.4°C. Leve sinovitis IFP 2°-3° mano derecha. Sin calor articular. PCR 12 mg/L (prev. 18). DAS28-PCR: 3.2 moderada.'},
     {l:'DX',n:'Análisis',key:'analisis',required:['diagnóstico','actividad'],txt:'AR (M05.9) actividad moderada con tendencia a mejoría. Respuesta parcial a MTX. No se justifica escalamiento terapéutico aún.'},
-    {l:'PL',n:'Plan',key:'plan',required:['medicamento','control','labs'],txt:'Continuar MTX 15 mg/sem + ácido fólico. Naproxeno 500 mg c/12h PRN. Labs y control en 3 meses.'}
+    {l:'PL',n:'Plan',key:'plan',required:['medicamento','control','labs'],txt:'Continuar metotrexate 7.5 mg: 1 tableta sábado y 1 tableta domingo antes de dormir + ácido fólico. Receta demo incluye amoxicilina 500 mg c/8h por 7 días; verificar alerta por alergia a penicilina antes de imprimir. Labs y control en 3 meses.'}
   ],
   soap:[
     {l:'S',n:'Subjetivo',key:'subjetivo',required:['dolor','síntomas'],txt:'Mejoría del dolor articular. Rigidez matutina ~30 min. Buena tolerancia al MTX.'},
@@ -1391,11 +1460,11 @@ const fmtSections={
     {l:'P',n:'Plan',key:'plan',required:['tratamiento','control'],txt:'Continuar esquema. Labs en 3 meses. Cita trimestral.'}
   ],
   hc:[
-    {l:'AN',n:'Anamnesis',key:'anamnesis',required:['inicio','evolución'],txt:'Paciente femenina, 54 años. AR seropositiva desde 2018. FR 148 UI/mL, anti-CCP 220 U/mL.'},
-    {l:'AP',n:'Antecedentes',key:'antecedentes',required:[],txt:'HTA controlada. Sin alergias conocidas. No fumadora.'},
+    {l:'AN',n:'Anamnesis',key:'anamnesis',required:['inicio','evolución'],txt:'Paciente masculino, 54 años. AR seropositiva desde 2018. FR 148 UI/mL, anti-CCP 220 U/mL.'},
+    {l:'AP',n:'Antecedentes',key:'antecedentes',required:[],txt:'HTA controlada. Alergia documentada a penicilina y derivados. No fumador.'},
     {l:'EF',n:'Examen físico',key:'examen',required:['PA','articulaciones'],txt:'PA 128/82 · FC 74 · Peso 68 kg. Sinovitis IFP bilateral. Fuerza 4+/5.'},
     {l:'DX',n:'Diagnóstico',key:'diagnostico',required:['CIE','actividad'],txt:'1. AR seropositiva (M05.9) — actividad moderada (DAS28 3.2)'},
-    {l:'PL',n:'Plan',key:'plan',required:['tratamiento'],txt:'Continuar MTX 15 mg/sem + ácido fólico. Reevaluar en 3 meses.'}
+    {l:'PL',n:'Plan',key:'plan',required:['tratamiento'],txt:'Continuar metotrexate 7.5 mg: 1 tableta sábado y 1 tableta domingo antes de dormir + ácido fólico. Reevaluar en 3 meses.'}
   ],
   eco:[
     {l:'IND',n:'Indicación',key:'indicacion',required:['articulación'],txt:'Evaluación sinovial en manos. AR conocida, control de respuesta.'},
@@ -1404,7 +1473,7 @@ const fmtSections={
   ],
   interconsulta:[
     {l:'MOT',n:'Motivo',key:'motivo',required:['especialidad','razón'],txt:'Solicito valoración oftalmológica para screening de toxicidad retiniana por MTX.'},
-    {l:'RES',n:'Resumen clínico',key:'resumen',required:['diagnóstico','tratamiento'],txt:'AR seropositiva (M05.9). MTX 15 mg/sem desde 2018. DAS28 3.2.'},
+    {l:'RES',n:'Resumen clínico',key:'resumen',required:['diagnóstico','tratamiento'],txt:'AR seropositiva (M05.9). Metotrexate 7.5 mg sábados y domingos desde 2018. DAS28 3.2.'},
     {l:'SOL',n:'Solicitud',key:'solicitud',required:['estudio'],txt:'Fondo de ojo, campo visual y OCT para screening de toxicidad retiniana.'}
   ],
   libre:[
@@ -1823,6 +1892,117 @@ function printDraft(){
   openSoapPrintWindow(getDesktopSoapPrintData());
 }
 
+function getActivePrescriptionDrugs(){
+  return Array.from(document.querySelectorAll('.rx-row')).filter(row=>{
+    const chk=row.querySelector('.rx-check');
+    return !chk || chk.checked;
+  }).map(row=>((row.querySelector('.rx-drug')||{}).textContent||'').trim());
+}
+
+function collectPrescriptionItems(){
+  const templates={
+    'metotrexate': {
+      generic:'Metotrexato',
+      form:'Tableta',
+      dose:'7.5 mg',
+      presentation:'Tabletas de 7.5 mg',
+      frequency:'1 tableta sábado y 1 tableta domingo antes de dormir',
+      route:'Vía oral',
+      duration:'Tratamiento crónico / según control',
+      indications:'Tomar 1 tableta los sábados y 1 tableta los domingos antes de dormir. No duplicar dosis. Control con laboratorios.'
+    },
+    'ácido fólico': {
+      generic:'Ácido fólico',
+      form:'Tableta',
+      dose:'5 mg',
+      presentation:'Tabletas de 5 mg',
+      frequency:'Una vez por semana (jueves)',
+      route:'Vía oral',
+      duration:'Durante uso de metotrexato',
+      indications:'Tomar separado del día de metotrexato según indicación médica.'
+    },
+    'acido folico': {
+      generic:'Ácido fólico',
+      form:'Tableta',
+      dose:'5 mg',
+      presentation:'Tabletas de 5 mg',
+      frequency:'Una vez por semana (jueves)',
+      route:'Vía oral',
+      duration:'Durante uso de metotrexato',
+      indications:'Tomar separado del día de metotrexato según indicación médica.'
+    },
+    'amoxicilina': {
+      generic:'Amoxicilina',
+      form:'Cápsula / tableta',
+      dose:'500 mg',
+      presentation:'Caja de cápsulas o tabletas de 500 mg',
+      frequency:'Cada 8 horas',
+      route:'Vía oral',
+      duration:'7 días',
+      indications:'Tomar con agua. Suspender y consultar de inmediato si presenta reacción alérgica.'
+    }
+  };
+  return Array.from(document.querySelectorAll('.rx-row')).filter(row=>{
+    const chk=row.querySelector('.rx-check');
+    return !chk || chk.checked;
+  }).map(row=>{
+    const drug=((row.querySelector('.rx-drug')||{}).textContent||'').trim();
+    const doseText=((row.querySelector('.rx-dose')||{}).textContent||'').trim();
+    const key=drug.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    const tpl=templates[drug.toLowerCase()] || templates[key] || {};
+    return Object.assign({
+      generic:drug,
+      form:'—',
+      dose:doseText.split('—')[0].trim() || '—',
+      presentation:'—',
+      frequency:doseText.split('—')[1] ? doseText.split('—')[1].trim() : '—',
+      route:'Vía oral',
+      duration:'—',
+      indications:'Usar según indicación médica.'
+    }, tpl);
+  });
+}
+
+function hasPenicillinAllergy(){
+  const allergy=((document.getElementById('f-alergias')||{}).value||'').toLowerCase();
+  return /penicil|betalact|beta lact|amoxic|ampicil/.test(allergy);
+}
+
+function prescriptionHasPenicillinDerivative(){
+  return getActivePrescriptionDrugs().some(drug=>/amoxic|penicil|ampicil|cloxacil|dicloxacil|piperacil|ticarcil/i.test(drug));
+}
+
+let pendingAllergyPrintAction='rx';
+
+function printPrescriptionWithAllergyCheck(action){
+  pendingAllergyPrintAction=action||'rx';
+  if(hasPenicillinAllergy() && prescriptionHasPenicillinDerivative()){
+    const name=document.getElementById('f-nombre') ? document.getElementById('f-nombre').value : document.getElementById('ptName').textContent;
+    const allergy=document.getElementById('f-alergias') ? document.getElementById('f-alergias').value : 'Penicilina y derivados';
+    document.getElementById('allergyPatientName').textContent=name||'Paciente';
+    document.getElementById('allergyPatientText').textContent=allergy||'Penicilina y derivados';
+    document.getElementById('allergyModal').classList.add('show');
+    return;
+  }
+  runAllergyPrintAction(pendingAllergyPrintAction);
+}
+
+function closeAllergyModal(){
+  document.getElementById('allergyModal').classList.remove('show');
+  showToast('Impresión de receta cancelada por alerta de alergia');
+}
+
+function proceedPrescriptionPrint(){
+  document.getElementById('allergyModal').classList.remove('show');
+  showToast('Procediendo bajo confirmación clínica');
+  setTimeout(()=>runAllergyPrintAction(pendingAllergyPrintAction),120);
+}
+
+function runAllergyPrintAction(action){
+  if(action==='all') printDraft();
+  else openPrescriptionPrintWindow(getPrescriptionPrintData());
+}
+
 function escapePrintHtml(value){
   return String(value||'').replace(/[&<>"']/g,function(ch){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
@@ -1905,6 +2085,94 @@ function getDesktopSoapPrintData(){
     vitals:vitals,
     soap:collectSoapPrintSections()
   };
+}
+
+function getPrescriptionPrintData(){
+  const now=new Date();
+  const fnac=getFieldValue('f-fnac','');
+  return {
+    prescriber:PRESCRIBER_INFO,
+    patient:getFieldValue('f-nombre',document.getElementById('ptName').textContent),
+    record:getFieldValue('f-exp',''),
+    birth:fnac,
+    age:calcAgeFromDate(fnac),
+    sex:getSelectText('f-sexo'),
+    dx:getFieldValue('f-diag',''),
+    allergy:getFieldValue('f-alergias',''),
+    date:now.toLocaleDateString('es-BO'),
+    time:now.toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit'}),
+    items:collectPrescriptionItems()
+  };
+}
+
+function buildPrescriptionPrintHtml(data){
+  const p=data.prescriber||{};
+  const rows=(data.items||[]).map((item,idx)=>`
+    <section class="rx-item">
+      <div class="rx-num">${idx+1}</div>
+      <div class="rx-main">
+        <label class="generic-label">Nombre genérico del tratamiento</label>
+        <div class="rx-generic">${escapePrintHtml(item.generic)}</div>
+        <div class="rx-grid">
+          <div><label>Forma farmacéutica</label><strong>${escapePrintHtml(item.form)}</strong></div>
+          <div><label>Dosis</label><strong>${escapePrintHtml(item.dose)}</strong></div>
+          <div><label>Presentación</label><strong>${escapePrintHtml(item.presentation)}</strong></div>
+          <div><label>Frecuencia</label><strong>${escapePrintHtml(item.frequency)}</strong></div>
+          <div><label>Vía de administración</label><strong>${escapePrintHtml(item.route)}</strong></div>
+          <div><label>Duración</label><strong>${escapePrintHtml(item.duration)}</strong></div>
+        </div>
+        <div class="rx-ind"><label>Indicaciones para el uso</label><p>${escapePrintHtml(item.indications)}</p></div>
+      </div>
+    </section>
+  `).join('');
+  const allergy=data.allergy ? `<div class="alert">ALERGIA DOCUMENTADA: ${escapePrintHtml(data.allergy)}</div>` : '';
+  return `<!doctype html><html><head><meta charset="utf-8"><title>Receta - DrNoteAI</title><style>
+    @page{size:A4;margin:10mm}
+    *{box-sizing:border-box}
+    body{margin:0;background:#f3f4ee;color:#0f2026;font-family:Arial,Helvetica,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .sheet{width:190mm;min-height:277mm;margin:0 auto;background:#fffef9;position:relative;overflow:hidden;padding:0 11mm 12mm;border:1px solid #dde4de}
+    .sheet:before{content:"";position:absolute;right:-24mm;top:82mm;width:138mm;height:138mm;border:1px solid rgba(6,91,92,.08);border-radius:50%;background:radial-gradient(circle,rgba(6,91,92,.08),transparent 62%);z-index:0}
+    .hero{height:34mm;margin:0 -11mm 8mm;padding:9mm 13mm;background:#f0f2ea;border-bottom:2px solid #0f6668;position:relative;overflow:hidden}
+    .wave{position:absolute;left:-18mm;top:-6mm;width:125mm;height:44mm;opacity:.62}
+    .docicon{position:absolute;left:82mm;top:11mm;width:30mm;height:26mm;border:1px solid #0f6668;background:repeating-linear-gradient(90deg,transparent 0 7mm,rgba(15,102,104,.28) 7.2mm 7.5mm),repeating-linear-gradient(0deg,transparent 0 5mm,rgba(15,102,104,.22) 5.2mm 5.4mm)}
+    .brand{position:absolute;right:13mm;top:8mm;color:#075a5d;text-align:left}
+    .brand h1{font-size:26pt;letter-spacing:-1px;margin:0;font-weight:800}
+    .brand p{font-size:12pt;margin:3mm 0 0;color:#42474b}
+    .badge{position:absolute;right:13mm;bottom:8mm;border:1px dashed #0f6668;padding:3mm 5mm;font-weight:800;color:#0f6668;letter-spacing:.16em}
+    .content{position:relative;z-index:1}
+    .top{display:grid;grid-template-columns:1fr 1fr;gap:3.5mm;margin-bottom:3.5mm}
+    .card{background:#edf3f4;border-left:4px solid #0f6668;padding:3mm 4mm}
+    .card h2{font-size:8.5pt;letter-spacing:.16em;color:#0f6668;margin:0 0 2mm;text-transform:uppercase}
+    .field{margin-bottom:1.6mm}
+    .field label{display:block;color:#607078;text-transform:uppercase;font-size:6.2pt;letter-spacing:.08em;margin-bottom:.5mm}
+    .field div{font-size:8.8pt;border-bottom:1px solid rgba(38,50,56,.42);min-height:4mm;padding-bottom:.6mm}
+    .alert{border:1px solid #b42318;background:#fff1f0;color:#8a1f17;border-radius:9px;padding:2.5mm 3.5mm;font-weight:800;font-size:9pt;margin:0 0 3.5mm;text-transform:uppercase;letter-spacing:.04em}
+    .rx-title{display:flex;align-items:center;gap:3mm;color:#0f6668;text-transform:uppercase;letter-spacing:.12em;font-weight:800;margin:4mm 0 2.5mm}
+    .rx-title b{display:inline-flex;align-items:center;justify-content:center;width:9mm;height:9mm;border-radius:50%;background:#0f6668;color:#fff}
+    .rx-item{display:grid;grid-template-columns:10mm 1fr;gap:3mm;border:1px solid #cddbd8;background:#fbfdfb;margin-bottom:4mm;padding:4mm;break-inside:avoid}
+    .rx-num{width:8mm;height:8mm;border-radius:50%;background:#0f6668;color:white;display:flex;align-items:center;justify-content:center;font-weight:800}
+    .generic-label{display:block;font-size:7pt;color:#607078;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.7mm}
+    .rx-generic{font-size:15pt;color:#0f2026;font-weight:800;margin-bottom:3mm}
+    .rx-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3mm}
+    .rx-grid label,.rx-ind label{display:block;font-size:7pt;color:#607078;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.7mm}
+    .rx-grid strong{display:block;font-size:10pt;border-bottom:1px solid rgba(38,50,56,.28);padding-bottom:1mm;min-height:5mm}
+    .rx-ind{margin-top:3mm;padding-top:3mm;border-top:1px solid #d6e1df}
+    .rx-ind p{font-size:10.5pt;line-height:1.45;margin:0}
+    .legal{font-size:8.5pt;color:#667276;text-align:center;margin:8mm 0 12mm}
+    .sign{display:grid;grid-template-columns:1fr 1fr;gap:24mm;align-items:end;margin-top:13mm}
+    .sig{text-align:center;color:#505b61;font-size:10pt}.sig .line{border-top:1px solid #6f777a;height:10mm}.stamp{height:18mm;border:1px dashed #9aa8a6;margin-top:4mm;display:flex;align-items:center;justify-content:center;color:#8a9795;font-size:8pt}
+    .side-text{position:absolute;right:2mm;top:53mm;writing-mode:vertical-rl;color:#0f6668;font-size:7pt;letter-spacing:.04em}
+    @media print{body{background:#fff}.sheet{border:none;margin:0;width:100%;min-height:277mm}}
+  </style></head><body><main class="sheet"><header class="hero"><svg class="wave" viewBox="0 0 520 190" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 75 C70 10 105 165 170 92 C235 20 280 155 345 86 C405 24 455 86 520 76" stroke="#172024" stroke-width="1.4"/><path d="M0 96 C80 18 112 178 182 103 C244 38 292 155 354 98 C410 48 455 98 520 92" stroke="#172024" stroke-width="1"/><path d="M0 116 C78 42 130 169 188 119 C250 64 292 145 360 112 C420 82 462 115 520 107" stroke="#172024" stroke-width=".8" opacity=".75"/><path d="M0 137 C84 75 128 168 198 132 C270 95 300 136 365 128 C430 120 470 130 520 122" stroke="#172024" stroke-width=".7" opacity=".5"/></svg><div class="docicon"></div><div class="brand"><h1>DrNoteAI</h1><p>El copiloto inteligente de la consulta médica.</p></div><div class="badge">RECETA MÉDICA</div></header><div class="side-text">DrNoteAI RECETA</div><section class="content"><div class="top"><div class="card"><h2>Prescriptor</h2><div class="field"><label>Nombre completo del médico</label><div>${escapePrintHtml(p.name)}</div></div><div class="field"><label>Número de cédula profesional</label><div>${escapePrintHtml(p.license)}</div></div><div class="field"><label>Institución que emite el título</label><div>${escapePrintHtml(p.institution)}</div></div><div class="field"><label>Domicilio completo del consultorio</label><div>${escapePrintHtml(p.address)}</div></div><div class="field"><label>Teléfono</label><div>${escapePrintHtml(p.phone)}</div></div></div><div class="card"><h2>Paciente</h2><div class="field"><label>Nombre completo</label><div>${escapePrintHtml(data.patient)}</div></div><div class="field"><label>Fecha / hora</label><div>${escapePrintHtml(data.date)} · ${escapePrintHtml(data.time)}</div></div><div class="field"><label>Fecha nacimiento / edad / sexo</label><div>${escapePrintHtml([data.birth,data.age,data.sex].filter(Boolean).join(' · '))}</div></div><div class="field"><label>Expediente</label><div>${escapePrintHtml(data.record)}</div></div><div class="field"><label>Diagnóstico</label><div>${escapePrintHtml(data.dx)}</div></div></div></div>${allergy}<div class="rx-title"><b>Rx</b><span>Tratamiento prescrito</span></div>${rows || '<p>No hay medicamentos seleccionados.</p>'}<div class="legal">Receta generada por DrNoteAI. Verificar alergias, dosis, interacciones y pertinencia clínica antes de entregar al paciente.</div><div class="sign"><div class="sig"><div class="line"></div>Firma del médico<br><strong>${escapePrintHtml(p.name)}</strong></div><div class="sig"><div class="line"></div>Sello profesional<div class="stamp">Sello / cédula profesional</div></div></div></section></main></body></html>`;
+}
+
+function openPrescriptionPrintWindow(data){
+  const html=buildPrescriptionPrintHtml(data);
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const win=window.open(url,'_blank','width=900,height=1200');
+  if(!win){ showToast('Popup bloqueado. Permite popups para imprimir.'); URL.revokeObjectURL(url); return; }
+  setTimeout(function(){ try{ win.print(); }finally{ setTimeout(()=>URL.revokeObjectURL(url),1000); } },500);
 }
 
 function buildSoapPrintHtml(data){

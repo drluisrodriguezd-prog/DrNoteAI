@@ -459,7 +459,7 @@ button[style*="background:var(--red)"]{
 
     <!-- Patient + completion flag -->
     <div class="pt-meta" style="margin-left:auto">
-      <div class="nm" id="ptName">M. E. Gutiérrez</div>
+      <div class="nm" id="ptName">C. A. Gutiérrez</div>
       <div class="dx" id="ptDx">AR · Control</div>
     </div>
     <button class="sync-pill" id="syncPillM" onclick="openMobileSyncModal()">Sync</button>
@@ -473,7 +473,7 @@ button[style*="background:var(--red)"]{
       <!-- Paciente + Diagnóstico con CIE-10 -->
       <div style="background:var(--white);border:1px solid var(--g6);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:8px">
         <div style="font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--g4);text-transform:uppercase">Paciente</div>
-        <input type="text" id="mPtName" value="María Elena Gutiérrez" placeholder="Nombre" autocomplete="off" oninput="document.getElementById('ptName').textContent=this.value" style="background:var(--g8);border:1px solid var(--g6);border-radius:8px;padding:10px;color:var(--g);font-family:inherit;font-size:13px;outline:none">
+        <input type="text" id="mPtName" value="Carlos Alberto Gutiérrez" placeholder="Nombre" autocomplete="off" oninput="document.getElementById('ptName').textContent=this.value" style="background:var(--g8);border:1px solid var(--g6);border-radius:8px;padding:10px;color:var(--g);font-family:inherit;font-size:13px;outline:none">
         <div style="position:relative">
           <input type="text" id="mDiag" value="Artritis Reumatoide (M05.9)" placeholder="Diagnóstico CIE-10 (escribe para buscar)" autocomplete="off" oninput="cie10Suggest(this,'m-cie10-list');syncDx()" onfocus="cie10Suggest(this,'m-cie10-list')" onblur="setTimeout(()=>document.getElementById('m-cie10-list').style.display='none',200)" style="width:100%;background:var(--g8);border:1px solid var(--g6);border-radius:8px;padding:10px;color:var(--g);font-family:inherit;font-size:13px;outline:none">
           <div id="m-cie10-list" class="cie10-list"></div>
@@ -679,7 +679,7 @@ const fmtSections = {
     {l:'EV',n:'Evolución',req:['síntomas','dolor'],txt:'Paciente refiere mejoría parcial del dolor articular en manos y muñecas bilaterales. Rigidez matutina de ~30 minutos. Buena tolerancia al metotrexate. Cumplimiento adecuado.'},
     {l:'EF',n:'Examen físico',req:['PA','articulaciones'],txt:'PA 128/82 · FC 74 · T 36.4°C. Leve sinovitis IFP 2°-3° mano derecha. PCR 12 mg/L (prev. 18). DAS28-PCR: 3.2 actividad moderada.'},
     {l:'DX',n:'Análisis',req:['diagnóstico'],txt:'AR (M05.9) actividad moderada con tendencia a mejoría. No se justifica escalamiento terapéutico.'},
-    {l:'PL',n:'Plan',req:['tratamiento','control'],txt:'Continuar MTX 15 mg/sem + ácido fólico. Naproxeno 500 mg c/12h PRN. Labs y control en 3 meses.'}
+    {l:'PL',n:'Plan',req:['tratamiento','control'],txt:'Continuar metotrexate 7.5 mg: 1 tableta sábado y 1 tableta domingo antes de dormir + ácido fólico. Receta demo incluye amoxicilina 500 mg c/8h por 7 días; verificar alerta por alergia a penicilina antes de imprimir. Labs y control en 3 meses.'}
   ],
   soap:[
     {l:'S',n:'Subjetivo',req:['dolor','síntomas'],txt:'Mejoría del dolor articular. Rigidez matutina ~30 min. Buena tolerancia al MTX.'},
@@ -688,11 +688,11 @@ const fmtSections = {
     {l:'P',n:'Plan',req:['tratamiento'],txt:'Continuar esquema. Labs en 3 meses. Cita trimestral.'}
   ],
   hc:[
-    {l:'AN',n:'Anamnesis',req:['inicio','evolución'],txt:'Paciente femenina, 54 años. AR seropositiva desde 2018. FR 148 UI/mL, anti-CCP 220 U/mL.'},
-    {l:'AP',n:'Antecedentes',req:[],txt:'HTA controlada. Sin alergias conocidas. No fumadora.'},
+    {l:'AN',n:'Anamnesis',req:['inicio','evolución'],txt:'Paciente masculino, 54 años. AR seropositiva desde 2018. FR 148 UI/mL, anti-CCP 220 U/mL.'},
+    {l:'AP',n:'Antecedentes',req:[],txt:'HTA controlada. Alergia documentada a penicilina y derivados. No fumador.'},
     {l:'EF',n:'Examen físico',req:['PA'],txt:'PA 128/82 · FC 74 · Peso 68 kg. Sinovitis IFP bilateral. Fuerza 4+/5.'},
     {l:'DX',n:'Diagnóstico',req:['diagnóstico'],txt:'AR seropositiva (M05.9) — actividad moderada (DAS28 3.2).'},
-    {l:'PL',n:'Plan',req:['tratamiento'],txt:'Continuar MTX 15 mg/sem + ácido fólico. Reevaluar en 3 meses.'}
+    {l:'PL',n:'Plan',req:['tratamiento'],txt:'Continuar metotrexate 7.5 mg: 1 tableta sábado y 1 tableta domingo antes de dormir + ácido fólico. Reevaluar en 3 meses.'}
   ],
   eco:[
     {l:'IND',n:'Indicación',req:['articulación'],txt:'Evaluación sinovial en manos. AR conocida, control de respuesta.'},
@@ -701,7 +701,7 @@ const fmtSections = {
   ],
   interconsulta:[
     {l:'MOT',n:'Motivo',req:['especialidad'],txt:'Solicito valoración oftalmológica para screening de toxicidad retiniana por MTX.'},
-    {l:'RES',n:'Resumen',req:['diagnóstico'],txt:'AR seropositiva (M05.9). MTX 15 mg/sem desde 2018. DAS28 3.2.'},
+    {l:'RES',n:'Resumen',req:['diagnóstico'],txt:'AR seropositiva (M05.9). Metotrexate 7.5 mg sábados y domingos desde 2018. DAS28 3.2.'},
     {l:'SOL',n:'Solicitud',req:['estudio'],txt:'Fondo de ojo, campo visual y OCT para screening de toxicidad retiniana.'}
   ],
   libre:[{l:'NT',n:'Nota',req:[],txt:''}]
