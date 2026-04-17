@@ -2,30 +2,82 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; connect-src https://generativelanguage.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>DrNoteAI</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap');
 
-:root {
-  /* Dark modern palette */
-  --g:#f2f2f2;--g2:#dcdcdc;--g3:#a8a8a8;--g4:#6e6e6e;--g5:#3a3a3a;
-  --g6:#262626;--g7:#141414;--g8:#1c1c1c;--white:#1a1a1a;
-  --teal:#2ad8a0;--teal-l:#0f2a22;--teal-m:#1f6e55;--teal-d:#7af0c4;
-  --red:#ff6060;--red-l:#311414;--red-m:#6e2a2a;
-  --amber:#f2a73a;--amber-l:#2e1f0b;--amber-m:#6e4a1a;
-  --r:14px;
+/* Visual refresh — single :root block (first duplicate removed per M-3) */
+:root{
+  --g:#f6fbff;
+  --g2:#dbe5f2;
+  --g3:#a8b5c9;
+  --g4:#74829a;
+  --g5:#384258;
+  --g6:#1d2636;
+  --g7:#050913;
+  --g8:#0c1422;
+  --white:#0f1726;
+  --teal:#7debd1;
+  --teal-l:#102c28;
+  --teal-m:#1d7460;
+  --teal-d:#bbfff0;
+  --red:#ff8278;
+  --red-l:#341717;
+  --red-m:#7b302c;
+  --amber:#f6bf67;
+  --amber-l:#34250f;
+  --amber-m:#7d5c27;
+  --r:18px;
+  --line:rgba(160,178,204,.16);
+  --panel-bg:linear-gradient(180deg,rgba(18,28,46,.96) 0%,rgba(8,13,24,.98) 100%);
+  --panel-alt:linear-gradient(180deg,rgba(23,35,58,.92) 0%,rgba(10,15,27,.98) 100%);
+  --dark-btn:linear-gradient(180deg,#202b3f 0%,#151d2e 58%,#0b111b 100%);
+  --teal-btn:linear-gradient(180deg,#9bf5e0 0%,#44d3b4 56%,#158264 100%);
+  --red-btn:linear-gradient(180deg,#ff978f 0%,#da6054 58%,#8f271f 100%);
+  --panel-shadow:0 24px 60px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.05);
+  --btn-shadow:0 16px 28px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 18px rgba(0,0,0,.28);
+  --glow-teal:0 0 0 3px rgba(42,216,160,.15);
   --safe-top:env(safe-area-inset-top,44px);
   --safe-bot:env(safe-area-inset-bottom,0px);
-  --glow-teal:0 0 0 3px rgba(42,216,160,.15);
 }
 ::selection{background:rgba(42,216,160,.25);color:#fff;}
 input,select,textarea,button{color-scheme:dark;}
 input:focus,select:focus,textarea:focus{box-shadow:var(--glow-teal);outline:none;}
+select,
+select option,
+select optgroup{
+  background:#0c1422;
+  color:#f6fbff;
+}
+select option:checked,
+select option:hover,
+select option:focus{
+  background:#153426;
+  color:#7debd1;
+}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{font-family:'Geist',system-ui,sans-serif;background:radial-gradient(600px 400px at 80% -10%,rgba(42,216,160,.07),transparent 60%),var(--g7);color:var(--g);height:100dvh;overflow:hidden;-webkit-font-smoothing:antialiased;}
+html,body{font-family:'Geist',system-ui,sans-serif;color:var(--g);height:100dvh;overflow:hidden;-webkit-font-smoothing:antialiased;}
+
+html,body{
+  background:
+    radial-gradient(760px 520px at 88% -8%,rgba(125,235,209,.18),transparent 58%),
+    radial-gradient(560px 380px at -10% 10%,rgba(100,145,255,.12),transparent 55%),
+    linear-gradient(180deg,#08101c 0%,#04070f 100%);
+}
+body{position:relative;isolation:isolate;}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:-1;
+  background:linear-gradient(180deg,rgba(255,255,255,.03),transparent 16%,transparent 82%,rgba(255,255,255,.015));
+}
 
 /* PAGE */
 .page{display:flex;flex-direction:column;height:100dvh;}
@@ -160,6 +212,10 @@ html,body{font-family:'Geist',system-ui,sans-serif;background:radial-gradient(60
 .btn-teal:hover{background:var(--teal-d);}
 .btn-teal.stop{background:var(--red);}
 .btn-dark{background:var(--g);color:#fff;flex:0 0 auto;padding:13px 18px;}
+.btn-rediarize{background:var(--amber-l);color:var(--amber);border:1px solid var(--amber-m);flex:1.1;}
+.btn-approve-mobile{background:var(--teal);color:#fff;flex:1;}
+.btn-approve-mobile:not(.ready){background:var(--g6);color:var(--g4);}
+.btn-approve-mobile.approved{background:var(--teal-d);color:#fff;}
 
 /* EXPORT MODAL */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:flex-end;}
@@ -168,6 +224,19 @@ html,body{font-family:'Geist',system-ui,sans-serif;background:radial-gradient(60
 @keyframes slide-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .modal-handle{width:36px;height:4px;background:var(--g5);border-radius:2px;margin:0 auto 14px;}
 .modal-title{font-size:15px;font-weight:600;margin-bottom:12px;}
+.sync-code{
+  width:100%;
+  min-height:104px;
+  resize:vertical;
+  background:var(--g8);
+  border:1px solid var(--g6);
+  border-radius:12px;
+  color:var(--g);
+  padding:10px;
+  font:11px/1.45 'Geist Mono',monospace;
+  outline:none;
+}
+.sync-label{display:block;font-size:10px;letter-spacing:.08em;color:var(--g4);text-transform:uppercase;margin:10px 0 6px;text-align:left;}
 .exp-opt{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--g6);border-radius:10px;margin-bottom:7px;cursor:pointer;background:var(--g8);transition:background .12s;}
 .exp-opt:active{background:var(--g6);}
 .exp-icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px;}
@@ -196,54 +265,6 @@ html,body{font-family:'Geist',system-ui,sans-serif;background:radial-gradient(60
 .done-banner.show{display:flex;}
 .done-banner svg{width:18px;height:18px;flex-shrink:0;}
 
-/* Visual refresh */
-:root{
-  --g:#f6fbff;
-  --g2:#dbe5f2;
-  --g3:#a8b5c9;
-  --g4:#74829a;
-  --g5:#384258;
-  --g6:#1d2636;
-  --g7:#050913;
-  --g8:#0c1422;
-  --white:#0f1726;
-  --teal:#7debd1;
-  --teal-l:#102c28;
-  --teal-m:#1d7460;
-  --teal-d:#bbfff0;
-  --red:#ff8278;
-  --red-l:#341717;
-  --red-m:#7b302c;
-  --amber:#f6bf67;
-  --amber-l:#34250f;
-  --amber-m:#7d5c27;
-  --r:18px;
-  --line:rgba(160,178,204,.16);
-  --panel-bg:linear-gradient(180deg,rgba(18,28,46,.96) 0%,rgba(8,13,24,.98) 100%);
-  --panel-alt:linear-gradient(180deg,rgba(23,35,58,.92) 0%,rgba(10,15,27,.98) 100%);
-  --dark-btn:linear-gradient(180deg,#202b3f 0%,#151d2e 58%,#0b111b 100%);
-  --teal-btn:linear-gradient(180deg,#9bf5e0 0%,#44d3b4 56%,#158264 100%);
-  --red-btn:linear-gradient(180deg,#ff978f 0%,#da6054 58%,#8f271f 100%);
-  --panel-shadow:0 24px 60px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.05);
-  --btn-shadow:0 16px 28px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 18px rgba(0,0,0,.28);
-}
-
-html,body{
-  background:
-    radial-gradient(760px 520px at 88% -8%,rgba(125,235,209,.18),transparent 58%),
-    radial-gradient(560px 380px at -10% 10%,rgba(100,145,255,.12),transparent 55%),
-    linear-gradient(180deg,#08101c 0%,#04070f 100%);
-}
-body{position:relative;isolation:isolate;}
-body::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  z-index:-1;
-  background:linear-gradient(180deg,rgba(255,255,255,.03),transparent 16%,transparent 82%,rgba(255,255,255,.015));
-}
-
 .status-bar,.hdr,.btm{
   background:rgba(8,13,24,.78);
   border-color:var(--line);
@@ -257,6 +278,29 @@ body::before{
 .timer-pill,.flag,.fmt-chip,.exp-opt,.modal-cancel{
   border:1px solid var(--line);
   box-shadow:var(--btn-shadow);
+}
+.sync-pill{
+  border:1px solid rgba(125,235,209,.35);
+  border-radius:999px;
+  padding:6px 10px;
+  background:linear-gradient(180deg,rgba(20,76,64,.92),rgba(9,24,27,.96));
+  color:var(--teal-d);
+  font-family:inherit;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  box-shadow:0 0 18px rgba(125,235,209,.16),inset 0 1px 0 rgba(255,255,255,.12);
+}
+.sync-pill.connected{
+  animation:syncPulse 1.8s ease-in-out infinite;
+  background:var(--teal-btn);
+  color:#04120d;
+}
+.sync-pill.waiting{color:var(--amber);border-color:rgba(246,191,103,.34);}
+@keyframes syncPulse{
+  0%,100%{box-shadow:0 0 10px rgba(125,235,209,.22),inset 0 1px 0 rgba(255,255,255,.18);}
+  50%{box-shadow:0 0 24px rgba(125,235,209,.52),inset 0 1px 0 rgba(255,255,255,.22);}
 }
 .timer-pill,.fmt-chip,.modal-cancel,.exp-opt{
   background:var(--dark-btn);
@@ -338,6 +382,23 @@ button[style*="background:var(--red)"]{
   color:#fff !important;
   border-color:rgba(255,180,173,.3) !important;
 }
+.btn-rediarize{
+  background:linear-gradient(180deg,rgba(94,69,25,.98),rgba(48,35,14,.98)) !important;
+  color:#ffd98a !important;
+  border-color:rgba(255,210,120,.28) !important;
+}
+.btm .btn-rediarize,
+.btm .btn-approve-mobile{
+  font-size:12px;
+  padding-left:10px;
+  padding-right:10px;
+}
+.btn-approve-mobile.ready,
+.btn-approve-mobile.approved{
+  background:var(--teal-btn) !important;
+  color:#04120d !important;
+  border-color:rgba(173,255,237,.38) !important;
+}
 
 .btm .btn{min-height:50px;}
 .btn-icon{width:52px;}
@@ -401,6 +462,7 @@ button[style*="background:var(--red)"]{
       <div class="nm" id="ptName">M. E. Gutiérrez</div>
       <div class="dx" id="ptDx">AR · Control</div>
     </div>
+    <button class="sync-pill" id="syncPillM" onclick="openMobileSyncModal()">Sync</button>
     <div class="flag" id="compFlag"><span class="flag-pct" id="flagPct">0%</span></div>
   </div>
 
@@ -411,7 +473,7 @@ button[style*="background:var(--red)"]{
       <!-- Paciente + Diagnóstico con CIE-10 -->
       <div style="background:var(--white);border:1px solid var(--g6);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:8px">
         <div style="font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--g4);text-transform:uppercase">Paciente</div>
-        <input type="text" id="mPtName" value="María Elena Gutiérrez" placeholder="Nombre" oninput="document.getElementById('ptName').textContent=this.value" style="background:var(--g8);border:1px solid var(--g6);border-radius:8px;padding:10px;color:var(--g);font-family:inherit;font-size:13px;outline:none">
+        <input type="text" id="mPtName" value="María Elena Gutiérrez" placeholder="Nombre" autocomplete="off" oninput="document.getElementById('ptName').textContent=this.value" style="background:var(--g8);border:1px solid var(--g6);border-radius:8px;padding:10px;color:var(--g);font-family:inherit;font-size:13px;outline:none">
         <div style="position:relative">
           <input type="text" id="mDiag" value="Artritis Reumatoide (M05.9)" placeholder="Diagnóstico CIE-10 (escribe para buscar)" autocomplete="off" oninput="cie10Suggest(this,'m-cie10-list');syncDx()" onfocus="cie10Suggest(this,'m-cie10-list')" onblur="setTimeout(()=>document.getElementById('m-cie10-list').style.display='none',200)" style="width:100%;background:var(--g8);border:1px solid var(--g6);border-radius:8px;padding:10px;color:var(--g);font-family:inherit;font-size:13px;outline:none">
           <div id="m-cie10-list" class="cie10-list"></div>
@@ -438,7 +500,7 @@ button[style*="background:var(--red)"]{
           <span style="font-size:11px;color:var(--g4)" id="apiStatusM">No configurada — demo</span>
         </div>
         <div id="apiBodyM" style="display:none;margin-top:10px">
-          <input type="password" id="apiKeyInputM" placeholder="AIzaSy..." oninput="checkApiKeyM()" style="width:100%;background:var(--g8);border:1px solid var(--g6);border-radius:8px;padding:10px;color:var(--g);font-family:'Geist Mono',monospace;font-size:12px;outline:none">
+          <input type="password" id="apiKeyInputM" placeholder="AIzaSy..." autocomplete="new-password" oninput="checkApiKeyM()" style="width:100%;background:var(--g8);border:1px solid var(--g6);border-radius:8px;padding:10px;color:var(--g);font-family:'Geist Mono',monospace;font-size:12px;outline:none">
           <div style="font-size:10px;color:var(--g4);margin-top:6px;line-height:1.5">Gratis en <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--teal);text-decoration:none">aistudio.google.com/app/apikey</a>. Solo vive en esta sesión.</div>
         </div>
       </div>
@@ -512,11 +574,11 @@ button[style*="background:var(--red)"]{
   <!-- BOTTOM BAR -->
   <div class="btm" id="btm">
     <!-- Reset (hidden until done) -->
-    <button class="btn btn-icon" id="btnReset" onclick="reset()" style="display:none" title="Volver a dictar">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-    </button>
+    <button class="btn btn-rediarize" id="btnReset" onclick="rediarizeMobile()" style="display:none">Volver a diarizar</button>
     <!-- Main action -->
     <button class="btn btn-teal" id="btnMain" onclick="toggleRec()">Dictar consulta</button>
+    <!-- Approve (hidden until done) -->
+    <button class="btn btn-approve-mobile" id="btnApproveM" onclick="approveMobile()" style="display:none">Aprobar</button>
     <!-- Save draft (hidden until done) -->
     <button class="btn btn-icon" id="btnDraft" onclick="saveDraft()" style="display:none" title="Guardar borrador">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
@@ -555,6 +617,11 @@ button[style*="background:var(--red)"]{
       <div class="exp-icon" style="background:#0f2a22;">🎙️</div>
       <div class="exp-info"><div class="et">Enviar diarización a PC</div><div class="es">Transcripción cruda → Desktop la procesa</div></div>
     </div>
+    <!-- M-9: Manual save draft button in export modal -->
+    <div class="exp-opt" onclick="saveDraft();hideExport()">
+      <div class="exp-icon" style="background:#1a2a3a;">💾</div>
+      <div class="exp-info"><div class="et">Guardar borrador</div><div class="es">El borrador se guarda en este dispositivo.</div></div>
+    </div>
     <button class="modal-cancel" onclick="hideExport()">Cancelar</button>
   </div>
 </div>
@@ -578,11 +645,30 @@ button[style*="background:var(--red)"]{
 
 <div class="toast" id="toast"></div>
 
+<!-- Sync Modal -->
+<div class="modal-bg" id="syncModalM" onclick="if(event.target===this)closeMobileSyncModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Sincronizar con PC</div>
+    <p style="font-size:12px;color:var(--g4);line-height:1.5;margin-bottom:10px;text-align:left">Pega el código generado en la PC, crea la respuesta, y pégala de vuelta en el escritorio. Luego tu dictado se reflejará en vivo.</p>
+    <label class="sync-label">Código de la PC</label>
+    <textarea class="sync-code" id="syncOfferM" placeholder="Pega aquí el código de la PC"></textarea>
+    <label class="sync-label">Respuesta para la PC</label>
+    <textarea class="sync-code" id="syncAnswerM" readonly placeholder="Aquí aparecerá la respuesta"></textarea>
+    <div id="syncStatusM" style="font-size:11px;color:var(--g4);margin:10px 0;text-align:left">Sync desconectado.</div>
+    <button onclick="createMobileSyncAnswer()" style="width:100%;padding:12px;background:var(--teal);color:#06120f;border:none;border-radius:10px;font-family:'Geist',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:6px">Crear respuesta</button>
+    <button onclick="copyMobileSyncAnswer()" style="width:100%;padding:12px;background:var(--dark-btn);color:var(--g2);border:1px solid var(--line);border-radius:10px;font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:6px">Copiar respuesta</button>
+    <button class="modal-cancel" onclick="closeMobileSyncModal()">Cerrar</button>
+  </div>
+</div>
+
 <script>
-// ── URL params ──
+// ── URL params (H-3: length + sanitization) ──
 const params = new URLSearchParams(location.search);
-if(params.get('nombre')) document.getElementById('ptName').textContent = params.get('nombre');
-if(params.get('diag')) document.getElementById('ptDx').textContent = (params.get('diag')||'')+ ' · '+(params.get('visita')||'Control');
+const nombre = (params.get('nombre') || '').substring(0, 120).replace(/[<>"]/g, '');
+const diag   = (params.get('diag')   || '').substring(0, 200).replace(/[<>"]/g, '');
+if(nombre) document.getElementById('ptName').textContent = nombre;
+if(diag)   document.getElementById('ptDx').textContent   = diag + ' · ' + (params.get('visita') || 'Control');
 
 // ── FORMAT ──
 let currentFmt = 'control';
@@ -659,23 +745,7 @@ function toggleApiMob(){
   b.style.display = (b.style.display==='none'||!b.style.display) ? 'block':'none';
 }
 let apiValidTimerM=null;
-function checkApiKeyM(){
-  const k=document.getElementById('apiKeyInputM').value.trim();
-  const st=document.getElementById('apiStatusM');
-  if(!k){ st.textContent='No configurada — demo'; st.style.color=''; return; }
-  if(!k.startsWith('AIza')){ st.textContent='✗ Formato inválido'; st.style.color='var(--red)'; return; }
-  st.textContent='⏳ Validando...'; st.style.color='var(--amber)';
-  clearTimeout(apiValidTimerM);
-  apiValidTimerM=setTimeout(async()=>{
-    try{
-      const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+encodeURIComponent(k));
-      const d=await r.json();
-      if(!r.ok){ st.textContent='✗ '+((d.error&&d.error.message)||('HTTP '+r.status)).slice(0,40); st.style.color='var(--red)'; return; }
-      st.textContent='✓ Gemini conectada'; st.style.color='var(--teal)';
-      showToast('API Gemini validada ✓');
-    }catch(e){ st.textContent='✗ Error de red'; st.style.color='var(--red)'; }
-  },500);
-}
+
 const GEMINI_MODEL_CHAIN_M=['gemini-1.5-flash-latest','gemini-1.5-flash','gemini-1.5-flash-8b','gemini-2.0-flash','gemini-flash-latest'];
 let apiConnectedM=false;
 function getGeminiModelChainM(){
@@ -685,31 +755,26 @@ function getGeminiModelChainM(){
 function getGeminiModelLabelM(model){
   return (model||'').replace(/^gemini-/,'');
 }
+
+// setApiConnectedUIM — single definition (C-4)
 function setApiConnectedUIM(connected, model){
-  apiConnectedM=connected;
-  const card=document.getElementById('apiCardM');
-  const badge=document.getElementById('apiOkBadgeM');
-  if(card) card.style.display=connected ? 'none' : '';
-  if(badge){
-    if(connected){
-      badge.textContent='✓ API OK · '+getGeminiModelLabelM(model);
-      badge.style.display='flex';
-    }else{
-      badge.style.display='none';
-    }
-  }
+  if(connected) setApiBadgeMobile('ok','',model);
+  else setApiBadgeMobile('idle');
 }
+
 function isGeminiAuthErrorM(msg,status){
   return status===403 || /api key not valid|invalid api key|permission_denied|permission denied|api has not been enabled|forbidden/i.test(msg||'');
 }
 function isGeminiRetryableErrorM(msg,status){
   return status===429 || status>=500 || /quota|resource_exhausted|rate limit|too many requests|unavailable|overloaded|model .*not found|not found for api version|does not exist|unsupported/i.test(msg||'');
 }
+
+// C-3: API key passed as header, not URL param
 async function callGeminiModelM(apiKey, model, reqBody){
-  const url='https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent?key='+encodeURIComponent(apiKey);
+  const url='https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent';
   let resp, data={};
   try{
-    resp=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:reqBody});
+    resp=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':apiKey},body:reqBody});
     try{ data=await resp.json(); }catch(_){ data={}; }
   }catch(err){
     return {ok:false,status:0,data:null,errorMessage:err.message||'Error de red'};
@@ -717,92 +782,9 @@ async function callGeminiModelM(apiKey, model, reqBody){
   const errorMessage=(data && data.error && data.error.message) ? data.error.message : ('HTTP '+resp.status);
   return {ok:resp.ok,status:resp.status,data,errorMessage};
 }
-function checkApiKeyM(){
-  const k=document.getElementById('apiKeyInputM').value.trim();
-  const st=document.getElementById('apiStatusM');
-  setApiConnectedUIM(false);
-  if(!k){ st.textContent='No configurada â€” demo'; st.style.color=''; return; }
-  if(!k.startsWith('AIza')){ st.textContent='âœ— Formato invÃ¡lido'; st.style.color='var(--red)'; return; }
-  st.textContent='â³ Validando...'; st.style.color='var(--amber)';
-  clearTimeout(apiValidTimerM);
-  apiValidTimerM=setTimeout(()=>validateGeminiKeyM(k),500);
-}
-async function validateGeminiKeyM(k){
-  const st=document.getElementById('apiStatusM');
-  try{
-    const reqBody=JSON.stringify({
-      contents:[{role:'user',parts:[{text:'Responde solo OK'}]}],
-      generationConfig:{temperature:0,maxOutputTokens:4}
-    });
-    let lastErr='Sin respuesta';
-    for(const model of getGeminiModelChainM()){
-      const result=await callGeminiModelM(k, model, reqBody);
-      if(result.ok){
-        window.__preferredGeminiModel=model;
-        st.textContent='âœ“ API validada â€” '+getGeminiModelLabelM(model);
-        st.style.color='var(--teal)';
-        setApiConnectedUIM(true, model);
-        showToast('API Gemini validada con '+getGeminiModelLabelM(model)+' âœ“');
-        return;
-      }
-      lastErr=result.errorMessage;
-      if(isGeminiAuthErrorM(result.errorMessage, result.status)){
-        st.textContent='âœ— '+result.errorMessage.slice(0,48);
-        st.style.color='var(--red)';
-        return;
-      }
-      if(!isGeminiRetryableErrorM(result.errorMessage, result.status)) break;
-    }
-    st.textContent='âœ— Sin cupo/acceso: '+lastErr.slice(0,34);
-    st.style.color='var(--red)';
-  }catch(e){
-    st.textContent='âœ— Error de red';
-    st.style.color='var(--red)';
-  }
-}
+
 function clearTranscriptM(){ transcript=''; const ta=document.getElementById('transcriptAreaM'); if(ta) ta.value=''; }
 function showApiErrorM(msg){ const e=document.getElementById('apiErrorM'); e.textContent=msg; e.style.display='block'; }
-
-function startRec(){
-  recState='recording'; dictSecs=0; transcript='';
-  document.getElementById('apiErrorM').style.display='none';
-  const ta=document.getElementById('transcriptAreaM'); if(ta) ta.value='';
-  const srSt=document.getElementById('srStatusM');
-  document.getElementById('micRing').classList.add('recording');
-  document.getElementById('wave').classList.add('show');
-  document.getElementById('micStatus').textContent='Grabando...';
-  document.getElementById('micHint').textContent='Toca de nuevo para detener';
-  document.getElementById('micTimer').classList.add('show');
-  document.getElementById('btnMain').textContent='Detener';
-  document.getElementById('btnMain').classList.add('stop');
-
-  dictInt = setInterval(()=>{
-    dictSecs++;
-    const m=Math.floor(dictSecs/60), s=(dictSecs%60).toString().padStart(2,'0');
-    document.getElementById('micTimer').textContent=m+':'+s;
-  },1000);
-
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SR){ srSt.textContent='⚠ Navegador sin reconocimiento de voz. Escribe manualmente.'; srSt.style.color='var(--amber)'; return; }
-  try{
-    recognition=new SR(); recognition.lang='es-BO';
-    recognition.continuous=true; recognition.interimResults=true;
-    let finalTxt='';
-    recognition.onresult=e=>{
-      let interim='';
-      for(let i=e.resultIndex;i<e.results.length;i++){
-        const tr=e.results[i][0].transcript;
-        if(e.results[i].isFinal) finalTxt+=tr+' '; else interim+=tr;
-      }
-      transcript=finalTxt;
-      if(ta) ta.value=finalTxt+(interim?('  … '+interim):'');
-    };
-    recognition.onerror=ev=>{ srSt.textContent='⚠ '+ev.error; srSt.style.color='var(--red)'; };
-    recognition.onend=()=>{ srSt.textContent='🔴 Detenido.'; srSt.style.color='var(--g4)'; };
-    recognition.start();
-    srSt.textContent='🎙 Escuchando...'; srSt.style.color='var(--teal)';
-  }catch(e){ srSt.textContent='⚠ '+e.message; srSt.style.color='var(--red)'; }
-}
 
 function buildCtxMobile(){
   const nameEl=document.getElementById('mPtName');
@@ -845,7 +827,7 @@ async function generateNoteMobile(transcriptTxt, fmt, apiKey){
     generationConfig:{temperature:0.3,maxOutputTokens:2048,responseMimeType:'application/json'}
   });
   const chain=getGeminiModelChainM();
-  let resp=null,data=null,used=null,lastErr='';
+  let data=null,used=null,lastErr='';
   for(const m of chain){
     const result=await callGeminiModelM(apiKey, m, reqBody);
     if(result.ok){ used=m; data=result.data; window.__preferredGeminiModel=m; break; }
@@ -858,14 +840,18 @@ async function generateNoteMobile(transcriptTxt, fmt, apiKey){
   if(!raw) throw new Error('Respuesta vacía (posible bloqueo de contenido)');
   const parsed=JSON.parse(raw.replace(/```json/g,'').replace(/```/g,'').trim());
   const secDefs=fmtSections[fmt]||fmtSections.control;
-  return {model:used, sections: secDefs.map(function(s,i){
-    const api=(parsed.secciones&&parsed.secciones[i])||{};
+  // H-6: merge sections by key (letra), not index
+  return {model:used, sections: secDefs.map(function(s){
+    const api=(parsed.secciones||[]).find(a=>a.letra===s.l)||{};
     return Object.assign({},s,{txt:api.contenido||s.txt});
   })};
 }
 
+// H-1 + H-2: race-condition guard + try/catch/finally
 async function stopRec(){
-  recState='processing'; clearInterval(dictInt);
+  if(recState !== 'recording') return;
+  recState='processing';
+  clearInterval(dictInt);
   if(recognition){ recognition.stop(); recognition=null; }
   document.getElementById('micRing').classList.remove('recording');
   document.getElementById('wave').classList.remove('show');
@@ -880,30 +866,33 @@ async function stopRec(){
   const finalTxt=(ta&&ta.value.trim())?ta.value.trim():transcript.trim();
   const apiKey=(document.getElementById('apiKeyInputM')||{}).value||'';
 
-  if(!finalTxt){
-    document.getElementById('proc').classList.remove('show');
-    showApiErrorM('No se capturó dictado. Escribe o pega el texto en la transcripción.');
-    recState='done'; return;
-  }
-  if(apiKey.startsWith('AIza')){
-    try{
-      const res=await generateNoteMobile(finalTxt, currentFmt, apiKey.trim());
-      document.getElementById('proc').classList.remove('show');
-      buildResult(res.sections);
-      showToast('Nota generada con '+res.model+' ✓');
-    }catch(e){
-      document.getElementById('proc').classList.remove('show');
-      showApiErrorM('Error Gemini: '+e.message+'. Mostrando demo.');
-      buildResult(fmtSections[currentFmt]||fmtSections.control);
+  try{
+    if(!finalTxt){
+      showApiErrorM('No se capturó dictado. Escribe o pega el texto en la transcripción.');
+      recState='done'; return;
     }
-  } else {
-    setTimeout(()=>{
-      document.getElementById('proc').classList.remove('show');
+    if(apiKey.startsWith('AIza')){
+      try{
+        const res=await generateNoteMobile(finalTxt, currentFmt, apiKey.trim());
+        buildResult(res.sections);
+        showToast('Nota generada con '+res.model+' ✓');
+      }catch(e){
+        showApiErrorM('Error Gemini: '+e.message+'. Mostrando demo.');
+        buildResult(fmtSections[currentFmt]||fmtSections.control);
+      }
+    } else {
+      await new Promise(resolve=>setTimeout(resolve,800));
       showApiErrorM('Modo DEMO (sin API key). Configura tu Gemini key arriba para diarizar tu dictado real.');
       buildResult(fmtSections[currentFmt]||fmtSections.control);
-    },800);
+    }
+  }catch(e){
+    showApiErrorM('Error inesperado: '+e.message);
+  }finally{
+    document.getElementById('proc')?.classList.remove('show');
+    if(recState==='processing') recState='idle';
   }
 }
+
 function resetRecUiMobile(message, color){
   clearInterval(dictInt);
   recState='idle';
@@ -972,100 +961,8 @@ function setApiBadgeMobile(state, text, model){
     status.style.color='';
   }
 }
-function setApiConnectedUIM(connected, model){
-  if(connected) setApiBadgeMobile('ok','',model);
-  else setApiBadgeMobile('idle');
-}
-function checkApiKeyM(){
-  const k=document.getElementById('apiKeyInputM').value.trim();
-  if(!k){ setApiBadgeMobile('idle'); return; }
-  if(!k.startsWith('AIza')){ setApiBadgeMobile('error','Formato inválido'); return; }
-  setApiBadgeMobile('pending');
-  clearTimeout(apiValidTimerM);
-  apiValidTimerM=setTimeout(()=>validateGeminiKeyM(k),500);
-}
-async function validateGeminiKeyM(k){
-  let lastErr='Sin respuesta';
-  const reqBody=JSON.stringify({
-    contents:[{role:'user',parts:[{text:'Responde solo OK'}]}],
-    generationConfig:{temperature:0,maxOutputTokens:4}
-  });
-  for(const model of getGeminiModelChainM()){
-    const result=await callGeminiModelM(k, model, reqBody);
-    if(result.ok){
-      window.__preferredGeminiModel=model;
-      setApiBadgeMobile('ok','',model);
-      showToast('API Gemini validada con '+getGeminiModelLabelM(model)+' ✓');
-      return;
-    }
-    lastErr=result.errorMessage;
-    if(isGeminiAuthErrorM(result.errorMessage, result.status)){
-      setApiBadgeMobile('error','Key inválida');
-      return;
-    }
-    if(!isGeminiRetryableErrorM(result.errorMessage, result.status)) break;
-  }
-  setApiBadgeMobile('error','Sin cupo o acceso usable');
-}
-async function startRec(){
-  if(recState!=='idle') return;
-  document.getElementById('apiErrorM').style.display='none';
-  const ta=document.getElementById('transcriptAreaM');
-  if(ta) ta.value='';
-  const srSt=document.getElementById('srStatusM');
-  srSt.textContent='Solicitando acceso al micrófono...';
-  srSt.style.color='var(--amber)';
-  const micAccess=await ensureMicAccessMobile();
-  if(!micAccess.ok){
-    resetRecUiMobile(micAccess.error,'var(--red)');
-    return;
-  }
-  recState='recording';
-  dictSecs=0;
-  transcript='';
-  document.getElementById('micRing').classList.add('recording');
-  document.getElementById('wave').classList.add('show');
-  document.getElementById('micStatus').textContent='Grabando...';
-  document.getElementById('micHint').textContent='Toca de nuevo para detener';
-  document.getElementById('micTimer').classList.add('show');
-  document.getElementById('btnMain').textContent='Detener';
-  document.getElementById('btnMain').classList.add('stop');
-  dictInt=setInterval(()=>{
-    dictSecs++;
-    const m=Math.floor(dictSecs/60), s=(dictSecs%60).toString().padStart(2,'0');
-    document.getElementById('micTimer').textContent=m+':'+s;
-  },1000);
-  const SR=window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SR){
-    resetRecUiMobile('Tu navegador no soporta reconocimiento de voz. Usa Chrome o Edge.','var(--amber)');
-    return;
-  }
-  try{
-    recognition=new SR();
-    recognition.lang='es-BO';
-    recognition.continuous=true;
-    recognition.interimResults=true;
-    let finalTxt='';
-    recognition.onresult=e=>{
-      let interim='';
-      for(let i=e.resultIndex;i<e.results.length;i++){
-        const tr=e.results[i][0].transcript;
-        if(e.results[i].isFinal) finalTxt+=tr+' '; else interim+=tr;
-      }
-      transcript=finalTxt;
-      if(ta) ta.value=finalTxt+(interim?('  … '+interim):'');
-    };
-    recognition.onerror=ev=>{ resetRecUiMobile('Error de reconocimiento: '+ev.error,'var(--red)'); };
-    recognition.onend=()=>{ if(recState==='recording') resetRecUiMobile('El reconocimiento se detuvo. Intenta de nuevo.','var(--amber)'); };
-    recognition.start();
-    srSt.textContent='Escuchando...';
-    srSt.style.color='var(--teal)';
-  }catch(e){
-    resetRecUiMobile('No se pudo iniciar: '+e.message,'var(--red)');
-  }
-}
 
-// ── BUILD RESULT + SEMAPHORE ──
+// ── BUILD RESULT + SEMAPHORE (C-2: DOM API, no innerHTML for AI content) ──
 function buildResult(sections){
   recState='done';
   const wrap=document.getElementById('resultWrap');
@@ -1081,37 +978,104 @@ function buildResult(sections){
     else if(wc<12){ sem='sem-med'; confClass='med'; confLabel='Parcial'; }
     else { sem='sem-ok'; confClass=''; confLabel='Completa'; }
 
-    // Section
+    // Section — built with DOM API (no innerHTML for AI content)
     const div=document.createElement('div');
     div.className='rsec '+sem;
     div.id='rsec-'+idx;
-    div.innerHTML=`
-      <div class="rsec-head">
-        <div class="rsec-left">
-          <div class="rsec-letter">${s.l.substring(0,3)}</div>
-          <span class="rsec-name">${s.n}</span>
-        </div>
-        <div class="rsec-right">
-          <div class="sem-dot"></div>
-          <span class="conf-badge ${confClass}">${confClass?confLabel:''}</span>
-          <span class="ai-tag">IA</span>
-        </div>
-      </div>
-      ${(sem!=='sem-ok')? `<div class="missing-alert show"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>${sem==='sem-low'?'Sección vacía — completa manualmente':'Pocos datos — revisa y amplía'}</div>`:''}
-      <textarea rows="3" oninput="evalSec(${idx},this.value)">${txt}</textarea>`;
+
+    // Header
+    const head=document.createElement('div');
+    head.className='rsec-head';
+
+    const left=document.createElement('div');
+    left.className='rsec-left';
+    const letter=document.createElement('div');
+    letter.className='rsec-letter';
+    letter.textContent=s.l.substring(0,3);
+    const nameSpan=document.createElement('span');
+    nameSpan.className='rsec-name';
+    nameSpan.textContent=s.n;
+    left.appendChild(letter);
+    left.appendChild(nameSpan);
+
+    const right=document.createElement('div');
+    right.className='rsec-right';
+    const dot=document.createElement('div');
+    dot.className='sem-dot';
+    const confBadge=document.createElement('span');
+    confBadge.className='conf-badge'+(confClass?' '+confClass:'');
+    confBadge.textContent=confClass?confLabel:'';
+    const aiTag=document.createElement('span');
+    aiTag.className='ai-tag';
+    aiTag.textContent='IA';
+    right.appendChild(dot);
+    right.appendChild(confBadge);
+    right.appendChild(aiTag);
+
+    head.appendChild(left);
+    head.appendChild(right);
+    div.appendChild(head);
+
+    // Missing alert (only static text, no AI content)
+    if(sem!=='sem-ok'){
+      const alert=document.createElement('div');
+      alert.className='missing-alert show';
+      const alertSvg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+      alertSvg.setAttribute('width','12'); alertSvg.setAttribute('height','12');
+      alertSvg.setAttribute('viewBox','0 0 24 24'); alertSvg.setAttribute('fill','none');
+      alertSvg.setAttribute('stroke','currentColor'); alertSvg.setAttribute('stroke-width','2');
+      alertSvg.setAttribute('stroke-linecap','round'); alertSvg.setAttribute('stroke-linejoin','round');
+      const polyPath=document.createElementNS('http://www.w3.org/2000/svg','path');
+      polyPath.setAttribute('d','M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z');
+      const l1=document.createElementNS('http://www.w3.org/2000/svg','line');
+      l1.setAttribute('x1','12'); l1.setAttribute('y1','9'); l1.setAttribute('x2','12'); l1.setAttribute('y2','13');
+      const l2=document.createElementNS('http://www.w3.org/2000/svg','line');
+      l2.setAttribute('x1','12'); l2.setAttribute('y1','17'); l2.setAttribute('x2','12.01'); l2.setAttribute('y2','17');
+      alertSvg.appendChild(polyPath); alertSvg.appendChild(l1); alertSvg.appendChild(l2);
+      alert.appendChild(alertSvg);
+      alert.appendChild(document.createTextNode(sem==='sem-low'?'Sección vacía — completa manualmente':'Pocos datos — revisa y amplía'));
+      div.appendChild(alert);
+    }
+
+    // Textarea — value set via .value, not innerHTML
+    const ta=document.createElement('textarea');
+    ta.rows=3;
+    ta.addEventListener('input',function(){ evalSec(idx,this.value); });
+    ta.value=txt;
+    div.appendChild(ta);
+
     wrap.appendChild(div);
 
-    // Checklist item
+    // Checklist item — built with DOM API
     const ci=document.createElement('div');
     ci.className='cl-item'+(sem==='sem-ok'?' done':'');
     ci.id='ci-'+idx;
     const semColor=sem==='sem-ok'?'var(--teal)':sem==='sem-med'?'var(--amber)':'var(--red)';
-    ci.innerHTML=`
-      <div class="ci" id="cico-${idx}">
-        <svg viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2 2 4-3"/></svg>
-      </div>
-      <span>${s.n}</span>
-      <span class="cl-sem" id="clsem-${idx}" style="color:${semColor}">${confLabel}</span>`;
+
+    const ciIcon=document.createElement('div');
+    ciIcon.className='ci';
+    ciIcon.id='cico-'+idx;
+    const checkSvg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    checkSvg.setAttribute('viewBox','0 0 10 10'); checkSvg.setAttribute('fill','none');
+    checkSvg.setAttribute('stroke','white'); checkSvg.setAttribute('stroke-width','2');
+    checkSvg.setAttribute('stroke-linecap','round'); checkSvg.setAttribute('stroke-linejoin','round');
+    const checkPath=document.createElementNS('http://www.w3.org/2000/svg','path');
+    checkPath.setAttribute('d','M2 5l2 2 4-3');
+    checkSvg.appendChild(checkPath);
+    ciIcon.appendChild(checkSvg);
+
+    const nameNode=document.createElement('span');
+    nameNode.textContent=s.n;
+
+    const semSpan=document.createElement('span');
+    semSpan.className='cl-sem';
+    semSpan.id='clsem-'+idx;
+    semSpan.style.color=semColor;
+    semSpan.textContent=confLabel;
+
+    ci.appendChild(ciIcon);
+    ci.appendChild(nameNode);
+    ci.appendChild(semSpan);
     clItems.appendChild(ci);
   });
 
@@ -1119,8 +1083,10 @@ function buildResult(sections){
   document.getElementById('checklistCard').style.display='block';
   document.getElementById('micStatus').textContent='Nota generada';
   document.getElementById('btnReset').style.display='flex';
-  document.getElementById('btnDraft').style.display='flex';
-  document.getElementById('btnExport').style.display='flex';
+  document.getElementById('btnApproveM').style.display='flex';
+  document.getElementById('btnDraft').style.display='none';
+  document.getElementById('btnExport').style.display='none';
+  document.getElementById('doneBanner').classList.remove('show');
   updateChecklist(sections.length);
   updateFlag(sections.length);
 }
@@ -1154,6 +1120,16 @@ function updateChecklist(total){
   const pct=total>0?Math.round(done/total*100):0;
   document.getElementById('clFill').style.width=pct+'%';
   document.getElementById('clPct').textContent=pct+'%';
+  updateMobileApproval(pct);
+}
+
+function updateMobileApproval(pct){
+  const btn=document.getElementById('btnApproveM');
+  if(!btn) return;
+  btn.classList.toggle('ready',pct>=75);
+  if(!btn.classList.contains('approved')){
+    btn.textContent=pct>=75?'Aprobar':'Aprobar '+pct+'%';
+  }
 }
 
 function updateFlag(total){
@@ -1166,19 +1142,63 @@ function updateFlag(total){
   else flag.className='flag complete';
 }
 
-// ── SAVE DRAFT ──
+// C-1: purge old drafts on load
+function purgeOldDrafts(){
+  try{
+    const keys=Object.keys(localStorage).filter(k=>k.startsWith('dictaai_draft_'));
+    // Keep only the 5 most recent drafts
+    if(keys.length>5){
+      keys.sort().slice(0,keys.length-5).forEach(k=>localStorage.removeItem(k));
+    }
+  }catch(_){}
+}
+purgeOldDrafts();
+
+// C-1: saveDraft is explicit/manual only — NOT called automatically from approveMobile
 function saveDraft(){
   const sections=[];
   document.querySelectorAll('[id^="rsec-"]').forEach(s=>{
     const n=s.querySelector('.rsec-name'); const t=s.querySelector('textarea');
     if(n&&t) sections.push({nombre:n.textContent, contenido:t.value});
   });
-  const draft={timestamp:new Date().toISOString(), paciente:document.getElementById('ptName').textContent, formato:currentFmt, secciones:sections};
-  localStorage.setItem('dictaai_draft_'+Date.now(), JSON.stringify(draft));
-  showToast('Borrador guardado');
+  const draft={
+    timestamp:new Date().toISOString(),
+    paciente:document.getElementById('ptName').textContent,
+    formato:currentFmt,
+    secciones:sections
+  };
+  try{
+    localStorage.setItem('dictaai_draft_'+Date.now(), JSON.stringify(draft));
+    showToast('Borrador guardado en este dispositivo');
+  }catch(_){
+    showToast('No se pudo guardar el borrador');
+  }
 }
 
-// ── RESET ──
+// ── APPROVE — C-1: removed auto-save call ──
+function approveMobile(){
+  const total=document.querySelectorAll('[id^="rsec-"]').length;
+  const done=document.querySelectorAll('.rsec.sem-ok').length;
+  const pct=total>0?Math.round(done/total*100):0;
+  const btn=document.getElementById('btnApproveM');
+  if(pct<75){ showToast('Completa al menos el 75% de las secciones'); return; }
+  btn.classList.add('ready','approved');
+  btn.textContent='Aprobada';
+  document.getElementById('doneBanner').classList.add('show');
+  document.getElementById('btnDraft').style.display='flex';
+  document.getElementById('btnExport').style.display='flex';
+  showToast('Nota aprobada — usa 💾 para guardar borrador');
+  // saveDraft() is NOT called here automatically (C-1)
+}
+
+// M-1: rediarizeMobile — call startRec directly (no setTimeout)
+function rediarizeMobile(){
+  reset();
+  clearTranscriptM();
+  showToast('Reiniciando diarizacion...');
+  startRec();
+}
+
 function reset(){
   recState='idle'; dictSecs=0;
   document.getElementById('resultWrap').classList.remove('show');
@@ -1193,6 +1213,9 @@ function reset(){
   document.getElementById('btnMain').textContent='Dictar consulta';
   document.getElementById('btnMain').classList.remove('stop');
   document.getElementById('btnReset').style.display='none';
+  document.getElementById('btnApproveM').style.display='none';
+  document.getElementById('btnApproveM').className='btn btn-approve-mobile';
+  document.getElementById('btnApproveM').textContent='Aprobar';
   document.getElementById('btnDraft').style.display='none';
   document.getElementById('btnExport').style.display='none';
   document.getElementById('doneBanner').classList.remove('show');
@@ -1232,7 +1255,101 @@ function downloadTxt(){
   showToast('Descargando...');
 }
 
-function printNote(){ hideExport(); window.print(); }
+function printNote(){
+  hideExport();
+  openSoapPrintWindow(getMobileSoapPrintData());
+}
+
+function escapePrintHtml(value){
+  return String(value||'').replace(/[&<>"']/g,function(ch){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+  });
+}
+
+function collectSoapPrintSections(){
+  const soap={s:'',o:'',a:'',p:''};
+  const fallback=[];
+  document.querySelectorAll('[id^="rsec-"]').forEach(function(section){
+    const nameEl=section.querySelector('.rsec-name');
+    const txtEl=section.querySelector('textarea');
+    const name=(nameEl&&nameEl.textContent||'').toLowerCase();
+    const text=(txtEl&&txtEl.value||'').trim();
+    if(!text) return;
+    fallback.push({name:name,text:text});
+    if(/subjet|evol|anam|motivo|historia/.test(name)) soap.s+=(soap.s?'\n\n':'')+text;
+    else if(/objet|examen|fisic|hallazgo|tecnica/.test(name)) soap.o+=(soap.o?'\n\n':'')+text;
+    else if(/anal|diagn|conclusion|impresion/.test(name)) soap.a+=(soap.a?'\n\n':'')+text;
+    else if(/plan|trat|solicitud|indicacion|receta/.test(name)) soap.p+=(soap.p?'\n\n':'')+text;
+  });
+  if(!soap.s && fallback[0]) soap.s=fallback[0].text;
+  if(!soap.o && fallback[1]) soap.o=fallback[1].text;
+  if(!soap.a && fallback[2]) soap.a=fallback[2].text;
+  if(!soap.p && fallback[3]) soap.p=fallback[3].text;
+  return soap;
+}
+
+function getMobileSoapPrintData(){
+  const now=new Date();
+  const patientInput=document.getElementById('mPtName');
+  const diagInput=document.getElementById('mDiag');
+  const dxText=(diagInput&&diagInput.value)||document.getElementById('ptDx').textContent||'';
+  return {
+    patient:(patientInput&&patientInput.value)||document.getElementById('ptName').textContent||'',
+    record:'',
+    birth:'',
+    age:'',
+    sex:'',
+    visit:(document.getElementById('ptDx').textContent||'').split('·')[1]||'Control',
+    dx:dxText,
+    dx2:'',
+    date:now.toLocaleDateString('es-BO'),
+    time:now.toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit'}),
+    doctor:'Medico tratante',
+    duration:document.getElementById('tpTime').textContent,
+    vitals:[
+      {k:'PA',v:'___/___ mmHg'},
+      {k:'FC',v:'___ lpm'},
+      {k:'FR',v:'___ rpm'},
+      {k:'Temp',v:'___ C'},
+      {k:'SatO2',v:'___ %'},
+      {k:'Peso',v:'___ kg'},
+      {k:'Talla',v:'___ cm'},
+      {k:'IMC',v:'___ kg/m2'}
+    ],
+    soap:collectSoapPrintSections()
+  };
+}
+
+function buildSoapPrintHtml(data){
+  const soap=data.soap||{};
+  const soapRows=[
+    ['S','Subjetivo',soap.s],
+    ['O','Objetivo',soap.o],
+    ['A','Analisis',soap.a],
+    ['P','Plan',soap.p]
+  ];
+  const vitals=(data.vitals||[]).map(function(item){
+    return '<div class="vital"><span>'+escapePrintHtml(item.k)+'</span><strong>'+escapePrintHtml(item.v)+'</strong></div>';
+  }).join('');
+  const sections=soapRows.map(function(row){
+    const body=row[2] ? escapePrintHtml(row[2]) : '&nbsp;';
+    return '<section class="soap-section"><div class="soap-title"><b>'+row[0]+'</b><span>'+row[1]+'</span></div><div class="soap-text">'+body+'</div></section>';
+  }).join('');
+  return '<!doctype html><html><head><meta charset="utf-8"><title>Nota SOAP - DrNoteAI</title><style>'+
+    '@page{size:A4;margin:10mm}*{box-sizing:border-box}body{margin:0;background:#f3f4ee;color:#263238;font-family:Arial,Helvetica,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}.sheet{width:190mm;min-height:277mm;margin:0 auto;background:#fffef9;position:relative;overflow:hidden;padding:0 11mm 12mm;border:1px solid #dde4de}.sheet:before{content:"";position:absolute;inset:40mm -20mm auto auto;width:120mm;height:120mm;border:1px solid rgba(6,91,92,.08);border-radius:50%;background:radial-gradient(circle,rgba(6,91,92,.08),transparent 62%);z-index:0}.hero{height:34mm;margin:0 -11mm 8mm;padding:9mm 13mm;background:#f0f2ea;border-bottom:2px solid #0f6668;position:relative;overflow:hidden}.brand{position:absolute;right:13mm;top:8mm;color:#075a5d;text-align:left}.brand h1{font-size:26pt;letter-spacing:-1px;margin:0;font-weight:800}.brand p{font-size:12pt;margin:3mm 0 0;color:#42474b}.brand .tag{border-top:1px solid #0f6668;border-bottom:1px solid #0f6668;margin-top:5mm;padding:2mm 0;font-style:italic}.badge{position:absolute;right:13mm;bottom:8mm;border:1px dashed #0f6668;padding:3mm 5mm;font-weight:700;color:#0f6668;letter-spacing:.12em}.wave{position:absolute;left:-18mm;top:-6mm;width:125mm;height:44mm;opacity:.62}.docicon{position:absolute;left:82mm;top:11mm;width:30mm;height:26mm;border:1px solid #0f6668;background:repeating-linear-gradient(90deg,transparent 0 7mm,rgba(15,102,104,.28) 7.2mm 7.5mm),repeating-linear-gradient(0deg,transparent 0 5mm,rgba(15,102,104,.22) 5.2mm 5.4mm)}.content{position:relative;z-index:1}.info{background:#edf3f4;border-left:4px solid #0f6668;padding:5mm 6mm;margin-bottom:6mm;display:grid;grid-template-columns:1.2fr .8fr .7fr;gap:4mm 7mm}.field label{display:block;color:#607078;text-transform:uppercase;font-size:7.2pt;letter-spacing:.08em;margin-bottom:1mm}.field div{font-size:10.5pt;border-bottom:1px solid rgba(38,50,56,.45);min-height:5mm;padding-bottom:1mm}.vitals{display:grid;grid-template-columns:repeat(4,1fr);gap:2.4mm;margin:0 0 6mm}.vital{border:1px solid #cddbd8;background:#f7faf8;padding:2.5mm 3mm}.vital span{display:block;font-size:7pt;color:#657178;text-transform:uppercase;letter-spacing:.08em}.vital strong{font-size:10pt;color:#263238}.soap-section{break-inside:avoid;margin-bottom:5.5mm}.soap-title{display:flex;align-items:center;gap:3mm;color:#0f6668;text-transform:uppercase;letter-spacing:.08em;font-weight:800;margin-bottom:2mm}.soap-title b{display:inline-flex;align-items:center;justify-content:center;width:8mm;height:8mm;border-radius:50%;background:#0f6668;color:#fff}.soap-title span{font-size:12pt}.soap-text{white-space:pre-wrap;font-size:10.5pt;line-height:1.55;min-height:24mm;padding:1mm 0 0;background:repeating-linear-gradient(to bottom,transparent 0 7.4mm,rgba(74,120,139,.45) 7.55mm 7.8mm)}.footer-note{text-align:center;color:#667276;font-size:8.5pt;margin:7mm 0 12mm}.signatures{display:grid;grid-template-columns:1fr 1fr;gap:26mm;margin-top:11mm}.sig{text-align:center;color:#505b61;font-size:10pt}.sig .line{border-top:1px solid #6f777a;height:10mm}.sig small{display:block;margin-top:1mm;color:#6b767b}.side-text{position:absolute;right:2mm;top:53mm;writing-mode:vertical-rl;color:#0f6668;font-size:7pt;letter-spacing:.04em}.stamp{height:18mm;border:1px dashed #9aa8a6;margin-top:4mm;display:flex;align-items:center;justify-content:center;color:#8a9795;font-size:8pt}@media print{body{background:#fff}.sheet{border:none;margin:0;width:100%;min-height:277mm}}'+
+    '</style></head><body><main class="sheet"><header class="hero"><svg class="wave" viewBox="0 0 520 190" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 75 C70 10 105 165 170 92 C235 20 280 155 345 86 C405 24 455 86 520 76" stroke="#172024" stroke-width="1.4"/><path d="M0 96 C80 18 112 178 182 103 C244 38 292 155 354 98 C410 48 455 98 520 92" stroke="#172024" stroke-width="1"/><path d="M0 116 C78 42 130 169 188 119 C250 64 292 145 360 112 C420 82 462 115 520 107" stroke="#172024" stroke-width=".8" opacity=".75"/><path d="M0 137 C84 75 128 168 198 132 C270 95 300 136 365 128 C430 120 470 130 520 122" stroke="#172024" stroke-width=".7" opacity=".5"/></svg><div class="docicon"></div><div class="brand"><h1>DrNoteAI</h1><p>El copiloto inteligente de la consulta medica.</p><div class="tag">Menos administracion, mas medicina.</div></div><div class="badge">NOTA SOAP</div></header><div class="side-text">DrNoteAI SOAP</div><section class="content"><div class="info"><div class="field"><label>Paciente</label><div>'+escapePrintHtml(data.patient)+'</div></div><div class="field"><label>Fecha</label><div>'+escapePrintHtml(data.date)+'</div></div><div class="field"><label>Hora</label><div>'+escapePrintHtml(data.time)+'</div></div><div class="field"><label>Fecha nacimiento / edad</label><div>'+escapePrintHtml([data.birth,data.age].filter(Boolean).join(' - '))+'</div></div><div class="field"><label>Sexo</label><div>'+escapePrintHtml(data.sex)+'</div></div><div class="field"><label>Expediente</label><div>'+escapePrintHtml(data.record)+'</div></div><div class="field"><label>Diagnostico principal</label><div>'+escapePrintHtml(data.dx)+'</div></div><div class="field"><label>Diagnosticos secundarios</label><div>'+escapePrintHtml(data.dx2)+'</div></div><div class="field"><label>Visita / duracion</label><div>'+escapePrintHtml([data.visit,data.duration].filter(Boolean).join(' - '))+'</div></div></div><div class="vitals">'+vitals+'</div>'+sections+'<div class="footer-note">Documento generado por DrNoteAI. Revisar, corregir y validar clinicamente antes de incorporar a la historia clinica.</div><div class="signatures"><div class="sig"><div class="line"></div>Firma del medico<small>'+escapePrintHtml(data.doctor)+'</small></div><div class="sig"><div class="line"></div>Sello profesional<div class="stamp">Sello / matricula</div></div></div></section></main></body></html>';
+}
+
+// H-5: Replace document.write with Blob URL
+function openSoapPrintWindow(data){
+  const html=buildSoapPrintHtml(data);
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const win=window.open(url,'_blank','width=900,height=1200');
+  if(!win){ showToast('Permite ventanas emergentes para imprimir'); URL.revokeObjectURL(url); return; }
+  setTimeout(function(){ win.print(); },300);
+  setTimeout(function(){ URL.revokeObjectURL(url); },5000);
+}
 
 function shareNote(){
   hideExport();
@@ -1241,10 +1358,17 @@ function shareNote(){
   else navigator.clipboard.writeText(txt).then(()=>showToast('Copiado para compartir'));
 }
 
-// ── QR CODE ──
+// ── QR CODE (C-5) ──
 const DESKTOP_URL = 'https://drluisrodriguezd-prog.github.io/Dicta-AI3/dictaai_v4_desktop_3.html';
 let currentQRLink = '';
 
+// M-2: replace deprecated unescape() with TextEncoder
+function safeBase64Encode(obj){
+  const bytes=new TextEncoder().encode(JSON.stringify(obj));
+  return btoa(String.fromCharCode(...bytes));
+}
+
+// C-5: buildNoteURL — only structured sections, no raw transcript
 function buildNoteURL(){
   const sections = [];
   document.querySelectorAll('[id^="rsec-"]').forEach(s=>{
@@ -1252,20 +1376,18 @@ function buildNoteURL(){
     const t = s.querySelector('textarea');
     if(n && t) sections.push({n: n.textContent, c: t.value});
   });
-  const ta=document.getElementById('transcriptAreaM');
-  const rawTranscript=(ta&&ta.value)||transcript||'';
   const payload = {
     paciente: document.getElementById('ptName').textContent,
     dx: document.getElementById('ptDx').textContent,
     fmt: currentFmt,
-    transcript: rawTranscript,   // DIARIZACION CRUDA para la PC
-    secs: sections,
+    secs: sections,   // structured sections only — no raw transcript (C-5)
     ts: new Date().toISOString().slice(0,16)
   };
-  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  const encoded = safeBase64Encode(payload);
   return DESKTOP_URL + '?dicta=' + encoded;
 }
-// Exportar solo transcripción (antes de generar nota) como código compacto
+
+// exportTranscriptCode — transcript intentionally included here (it's the export-transcript feature)
 function exportTranscriptCode(){
   const ta=document.getElementById('transcriptAreaM');
   const txt=(ta&&ta.value.trim())||transcript.trim();
@@ -1277,14 +1399,21 @@ function exportTranscriptCode(){
     transcript:txt,
     ts:new Date().toISOString().slice(0,16)
   };
-  const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  const encoded=safeBase64Encode(payload);
   const link=DESKTOP_URL+'?dicta='+encoded;
   currentQRLink=link;
   document.getElementById('qrLink').textContent=link.length>80?link.substring(0,77)+'...':link;
   const container=document.getElementById('qrCanvas');
   container.innerHTML='';
-  if(window.QRCode){ new QRCode(container,{text:link,width:200,height:200,colorDark:'#0a0a0a',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M}); }
-  else { const img=document.createElement('img'); img.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(link); img.style.width='200px'; img.style.height='200px'; container.appendChild(img); }
+  // C-5: hard require qrcodejs — no external fallback
+  if(window.QRCode){
+    new QRCode(container,{text:link,width:200,height:200,colorDark:'#0a0a0a',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+  } else {
+    const msg=document.createElement('div');
+    msg.style.cssText='padding:16px;color:var(--amber);font-size:12px;text-align:center;';
+    msg.textContent='Librería QR no disponible';
+    container.appendChild(msg);
+  }
   hideExport();
   document.getElementById('qrBg').classList.add('show');
 }
@@ -1295,10 +1424,10 @@ function showQR(){
   currentQRLink = link;
   document.getElementById('qrLink').textContent = link.length > 80 ? link.substring(0,77)+'...' : link;
 
-  // Generate QR using qrcode lib
   const container = document.getElementById('qrCanvas');
   container.innerHTML = '';
 
+  // C-5: hard require qrcodejs — no external fallback
   if(window.QRCode){
     new QRCode(container, {
       text: link,
@@ -1309,13 +1438,10 @@ function showQR(){
       correctLevel: QRCode.CorrectLevel.M
     });
   } else {
-    // Fallback: use QR API
-    const img = document.createElement('img');
-    img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(link);
-    img.style.borderRadius = '8px';
-    img.style.width = '200px';
-    img.style.height = '200px';
-    container.appendChild(img);
+    const msg=document.createElement('div');
+    msg.style.cssText='padding:16px;color:var(--amber);font-size:12px;text-align:center;';
+    msg.textContent='Librería QR no disponible';
+    container.appendChild(msg);
   }
 
   document.getElementById('qrBg').classList.add('show');
@@ -1364,6 +1490,8 @@ const CIE10=[
   ['F41.1','Trastorno de ansiedad generalizada'],['F32.9','Episodio depresivo'],
   ['G43.9','Migraña']
 ];
+
+// H-4: CIE-10 autocomplete with DOM API (no innerHTML for user/external data)
 function cie10Suggest(inp,listId){
   const q=inp.value.trim().toLowerCase();
   const list=document.getElementById(listId);
@@ -1375,10 +1503,30 @@ function cie10Suggest(inp,listId){
     c.toLowerCase().includes(term)||d.toLowerCase().includes(term)||
     d.toLowerCase().split(' ').some(w=>w.startsWith(term))
   ).slice(0,8);
-  if(!matches.length){ list.innerHTML='<div class="cie10-empty">Sin coincidencias CIE-10</div>'; list.style.display='block'; return; }
-  list.innerHTML=matches.map(([c,d])=>
-    `<div class="cie10-item" onmousedown="cie10Pick('${inp.id}','${listId}','${c}','${d.replace(/'/g,"\\'")}')" ontouchstart="cie10Pick('${inp.id}','${listId}','${c}','${d.replace(/'/g,"\\'")}')"><span class="cie10-desc">${d}</span><span class="cie10-code">${c}</span></div>`
-  ).join('');
+  list.innerHTML='';
+  if(!matches.length){
+    const empty=document.createElement('div');
+    empty.className='cie10-empty';
+    empty.textContent='Sin coincidencias CIE-10';
+    list.appendChild(empty);
+    list.style.display='block';
+    return;
+  }
+  matches.forEach(([c,d])=>{
+    const item=document.createElement('div');
+    item.className='cie10-item';
+    const desc=document.createElement('span');
+    desc.className='cie10-desc';
+    desc.textContent=d;
+    const code=document.createElement('span');
+    code.className='cie10-code';
+    code.textContent=c;
+    item.appendChild(desc);
+    item.appendChild(code);
+    item.addEventListener('mousedown',()=>cie10Pick(inp.id,listId,c,d));
+    item.addEventListener('touchstart',()=>cie10Pick(inp.id,listId,c,d),{passive:true});
+    list.appendChild(item);
+  });
   list.style.display='block';
 }
 function cie10Pick(inputId,listId,code,desc){
@@ -1394,10 +1542,15 @@ function syncDx(){
   const diag=(document.getElementById('mDiag').value||'').split('(')[0].trim();
   document.getElementById('ptDx').textContent=(diag||'—')+' · Control';
 }
+
+// C-3: validateApiKeyFastMobile uses header, not URL param
 function validateApiKeyFastMobile(key){
   const ctrl=new AbortController();
   const timeout=setTimeout(()=>ctrl.abort(), 6000);
-  return fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+encodeURIComponent(key), { signal: ctrl.signal })
+  return fetch('https://generativelanguage.googleapis.com/v1beta/models', {
+    headers:{'x-goog-api-key':key},
+    signal: ctrl.signal
+  })
     .then(async resp => {
       let data={};
       try{ data=await resp.json(); }catch(_){ data={}; }
@@ -1406,6 +1559,7 @@ function validateApiKeyFastMobile(key){
     .finally(()=>clearTimeout(timeout));
 }
 
+// C-4: Single definitions of checkApiKeyM, validateGeminiKeyM, startRec
 checkApiKeyM = function(){
   const k=document.getElementById('apiKeyInputM').value.trim();
   if(!k){ setApiBadgeMobile('idle'); return; }
@@ -1479,6 +1633,7 @@ startRec = async function(){
       }
       transcript=finalTxt;
       if(ta) ta.value=finalTxt+(interim?('  … '+interim):'');
+      mobileSyncSendTranscript(ta?ta.value:transcript);
     };
     recognition.onerror=ev=>resetRecUiMobile('Error de reconocimiento: '+ev.error,'var(--red)');
     recognition.onend=()=>{ if(recState==='recording') resetRecUiMobile('El reconocimiento se detuvo. Intenta de nuevo.','var(--amber)'); };
@@ -1489,7 +1644,138 @@ startRec = async function(){
     resetRecUiMobile('No se pudo iniciar: '+e.message,'var(--red)');
   }
 };
+
+// M-5: visibilitychange — stop recording when tab hidden
+// ── WIFI SYNC: MOBILE SENDER ──
+let syncPcM=null, syncChannelM=null;
+
+function syncEncode(obj){
+  return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
+}
+
+function syncDecode(code){
+  const raw=String(code||'').trim().replace(/^drnote-sync:/,'');
+  if(!raw) throw new Error('código vacío');
+  return JSON.parse(decodeURIComponent(escape(atob(raw))));
+}
+
+function waitForIceComplete(pc){
+  return new Promise(resolve=>{
+    if(pc.iceGatheringState==='complete') return resolve();
+    const done=()=>{ if(pc.iceGatheringState==='complete'){ pc.removeEventListener('icegatheringstatechange',done); resolve(); } };
+    pc.addEventListener('icegatheringstatechange',done);
+    setTimeout(resolve,2200);
+  });
+}
+
+function setMobileSyncState(state,msg){
+  const pill=document.getElementById('syncPillM');
+  const st=document.getElementById('syncStatusM');
+  if(pill){
+    pill.className='sync-pill'+(state==='connected'?' connected':state==='waiting'?' waiting':'');
+    pill.textContent=state==='connected'?'Sync OK':state==='waiting'?'Sync...':'Sync';
+  }
+  if(st) st.textContent=msg||'';
+}
+
+function openMobileSyncModal(){ document.getElementById('syncModalM').classList.add('show'); }
+function closeMobileSyncModal(){ document.getElementById('syncModalM').classList.remove('show'); }
+
+async function createMobileSyncAnswer(){
+  try{
+    if(syncPcM) syncPcM.close();
+    const offer=syncDecode(document.getElementById('syncOfferM').value);
+    syncPcM=new RTCPeerConnection({iceServers:[]});
+    syncPcM.ondatachannel=function(ev){
+      syncChannelM=ev.channel;
+      setupMobileSyncChannel(syncChannelM);
+    };
+    syncPcM.onconnectionstatechange=function(){
+      if(['failed','disconnected','closed'].includes(syncPcM.connectionState)) setMobileSyncState('idle','Sync desconectado.');
+    };
+    await syncPcM.setRemoteDescription(new RTCSessionDescription(offer));
+    const answer=await syncPcM.createAnswer();
+    await syncPcM.setLocalDescription(answer);
+    await waitForIceComplete(syncPcM);
+    document.getElementById('syncAnswerM').value='drnote-sync:'+syncEncode(syncPcM.localDescription);
+    setMobileSyncState('waiting','Respuesta lista. Cópiala y pégala en la PC.');
+    showToast('Respuesta Sync creada');
+  }catch(e){
+    setMobileSyncState('idle','No se pudo crear respuesta: '+e.message);
+  }
+}
+
+function copyMobileSyncAnswer(){
+  const value=document.getElementById('syncAnswerM').value;
+  if(!value){ showToast('Primero crea la respuesta'); return; }
+  navigator.clipboard.writeText(value).then(()=>showToast('Respuesta copiada')).catch(()=>showToast('No se pudo copiar'));
+}
+
+function setupMobileSyncChannel(ch){
+  ch.onopen=function(){
+    setMobileSyncState('connected','Sync conectado. El dictado se enviará a la PC en vivo.');
+    closeMobileSyncModal();
+    showToast('Sync PC conectado ✓');
+    mobileSyncSendPatient();
+    const ta=document.getElementById('transcriptAreaM');
+    if(ta && ta.value) mobileSyncSendTranscript(ta.value);
+  };
+  ch.onclose=function(){ setMobileSyncState('idle','Sync desconectado.'); };
+}
+
+function mobileSyncSend(type,payload){
+  if(!syncChannelM || syncChannelM.readyState!=='open') return;
+  try{ syncChannelM.send(JSON.stringify(Object.assign({type:type,ts:Date.now()},payload||{}))); }catch(_){}
+}
+
+function mobileSyncSendTranscript(text){
+  transcript=text||'';
+  mobileSyncSend('transcript',{text:transcript});
+}
+
+function mobileSyncSendPatient(){
+  const nameEl=document.getElementById('mPtName');
+  const dxEl=document.getElementById('mDiag');
+  mobileSyncSend('patient',{
+    patient:(nameEl&&nameEl.value)||document.getElementById('ptName').textContent||'',
+    dx:(dxEl&&dxEl.value)||document.getElementById('ptDx').textContent||''
+  });
+}
+
+(function bindMobileSyncInputs(){
+  const ta=document.getElementById('transcriptAreaM');
+  if(ta) ta.addEventListener('input',function(){ mobileSyncSendTranscript(this.value); });
+  ['mPtName','mDiag'].forEach(function(id){
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('input',mobileSyncSendPatient);
+  });
+  const oldToggle=toggleRec;
+  toggleRec=function(){
+    if(recState==='idle') mobileSyncSend('state',{state:'recording'});
+    else if(recState==='recording') mobileSyncSend('state',{state:'stopping'});
+    oldToggle();
+  };
+})();
+
+(function initMobileSyncFromQr(){
+  const hash=new URLSearchParams((location.hash||'').replace(/^#/,''));
+  const offerFromHash=hash.get('syncOffer');
+  const offerFromQuery=params.get('syncOffer');
+  const offer=offerFromHash || offerFromQuery;
+  if(!offer) return;
+  const input=document.getElementById('syncOfferM');
+  if(input) input.value=offer;
+  setTimeout(function(){
+    openMobileSyncModal();
+    setMobileSyncState('waiting','Código recibido desde QR. Creando respuesta para la PC...');
+    showToast('Sync QR cargado');
+    createMobileSyncAnswer();
+  },300);
+})();
+
+document.addEventListener('visibilitychange', function(){
+  if(document.hidden && recState==='recording') stopRec();
+});
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </body>
 </html>

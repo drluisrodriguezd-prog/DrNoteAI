@@ -2,21 +2,13 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; connect-src https://generativelanguage.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DrNoteAI</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap');
 
-:root {
-  /* Dark modern palette */
-  --g: #f2f2f2; --g2: #dcdcdc; --g3: #a8a8a8; --g4: #6e6e6e; --g5: #3a3a3a;
-  --g6: #262626; --g7: #141414; --g8: #1c1c1c; --white: #1a1a1a;
-  --teal: #2ad8a0; --teal-l: #0f2a22; --teal-m: #1f6e55; --teal-d: #7af0c4;
-  --red: #ff6060; --red-l: #311414; --red-m: #6e2a2a;
-  --amber: #f2a73a; --amber-l: #2e1f0b; --amber-m: #6e4a1a;
-  --r: 10px;
-  --glow-teal: 0 0 0 3px rgba(42,216,160,.15);
-}
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
@@ -24,6 +16,18 @@
 ::selection { background: rgba(42,216,160,.25); color: #fff; }
 input, select, textarea, button { color-scheme: dark; }
 input:focus, select:focus, textarea:focus { box-shadow: var(--glow-teal); }
+select,
+select option,
+select optgroup {
+  background: #0c1422;
+  color: #f6fbff;
+}
+select option:checked,
+select option:hover,
+select option:focus {
+  background: #153426;
+  color: #7debd1;
+}
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Geist', system-ui, sans-serif; background: radial-gradient(1200px 800px at 80% -10%, rgba(42,216,160,.07), transparent 60%), radial-gradient(900px 600px at -10% 110%, rgba(90,120,255,.05), transparent 60%), var(--g7); color: var(--g); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
@@ -38,6 +42,30 @@ header { background: var(--white); border-bottom: 1px solid var(--g6); height: 4
 .api-ok-badge.is-ok { color: var(--teal-d); background: var(--teal-l); border: 1px solid var(--teal-m); }
 .api-ok-badge.is-error { color: #ffc6c2; background: var(--red-l); border: 1px solid var(--red-m); }
 .api-ok-badge.is-pending { color: var(--amber); background: var(--amber-l); border: 1px solid var(--amber-m); }
+.sync-pill {
+  border: 1px solid rgba(125,235,209,.35);
+  border-radius: 999px;
+  padding: 5px 11px;
+  background: linear-gradient(180deg, rgba(20,76,64,.92), rgba(9,24,27,.96));
+  color: var(--teal-d);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 0 18px rgba(125,235,209,.16), inset 0 1px 0 rgba(255,255,255,.12);
+}
+.sync-pill.connected {
+  animation: syncPulse 1.8s ease-in-out infinite;
+  background: var(--teal-btn);
+  color: #04120d;
+}
+.sync-pill.waiting { color: var(--amber); border-color: rgba(246,191,103,.34); }
+@keyframes syncPulse {
+  0%,100% { box-shadow: 0 0 10px rgba(125,235,209,.22), inset 0 1px 0 rgba(255,255,255,.18); }
+  50% { box-shadow: 0 0 24px rgba(125,235,209,.52), inset 0 1px 0 rgba(255,255,255,.22); }
+}
 
 /* ── CONSULT TIMER ── */
 .consult-timer {
@@ -259,6 +287,33 @@ header { background: var(--white); border-bottom: 1px solid var(--g6); height: 4
 .btn-approve.ready:hover { background: var(--teal-d); }
 .btn-approve.approved { background: var(--teal-d); color: #fff; }
 
+.review-actions {
+  display: none;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.review-actions.show { display: grid; }
+
+.btn-rediarize {
+  width: 100%;
+  border: 1px solid var(--amber-m);
+  border-radius: 6px;
+  padding: 10px;
+  font-family: 'Geist', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--amber-l);
+  color: var(--amber);
+  transition: all .2s;
+}
+
+.btn-rediarize:hover {
+  border-color: var(--amber);
+  filter: brightness(1.08);
+}
+
 /* Draft save */
 .draft-row {
   display: flex;
@@ -456,6 +511,62 @@ header { background: var(--white); border-bottom: 1px solid var(--g6); height: 4
 /* Toast */
 .toast { position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%) translateY(8px); background: var(--g); color: #fff; border-radius: 20px; padding: 7px 16px; font-size: 12px; font-weight: 500; opacity: 0; pointer-events: none; transition: all .22s; white-space: nowrap; z-index: 999; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.sync-modal-bg { position: fixed; inset: 0; z-index: 998; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,.62); padding: 24px; }
+.sync-modal-bg.show { display: flex; }
+.sync-modal {
+  width: min(760px, 96vw);
+  background: var(--panel-bg);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--panel-shadow);
+  padding: 18px;
+}
+.sync-modal h3 { font-size: 16px; margin-bottom: 6px; color: var(--g); }
+.sync-modal p { font-size: 12px; color: var(--g3); line-height: 1.5; margin-bottom: 12px; }
+.sync-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.sync-box label { display: block; font-size: 10px; letter-spacing: .08em; color: var(--g4); text-transform: uppercase; margin-bottom: 6px; }
+.sync-box textarea {
+  width: 100%;
+  min-height: 112px;
+  resize: vertical;
+  background: var(--g8);
+  border: 1px solid var(--g6);
+  border-radius: 12px;
+  color: var(--g);
+  padding: 10px;
+  font: 11px/1.45 'Geist Mono', monospace;
+}
+.sync-qr-wrap {
+  display: none;
+  align-items: center;
+  gap: 14px;
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255,255,255,.04);
+}
+.sync-qr-wrap.show { display: flex; }
+.sync-qr {
+  width: 148px;
+  min-width: 148px;
+  min-height: 148px;
+  padding: 10px;
+  border-radius: 14px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sync-qr img, .sync-qr canvas { max-width: 128px; max-height: 128px; }
+.sync-qr-copy { flex: 1; min-width: 0; }
+.sync-qr-copy strong { display: block; color: var(--teal-d); font-size: 12px; margin-bottom: 4px; }
+.sync-qr-copy span { display: block; color: var(--g3); font-size: 11px; line-height: 1.45; }
+.sync-qr-copy code { display: block; margin-top: 7px; color: var(--g4); font: 10px/1.35 'Geist Mono', monospace; word-break: break-all; }
+.sync-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; margin-top: 14px; }
+.sync-actions button { border: 1px solid var(--line); border-radius: 10px; padding: 9px 13px; font-family: inherit; font-weight: 600; cursor: pointer; background: var(--dark-btn); color: var(--g2); }
+.sync-actions .primary { background: var(--teal-btn); color: #04120d; border-color: rgba(173,255,237,.38); }
+@media(max-width:760px){ .sync-grid { grid-template-columns: 1fr; } }
 
 /* Completed banner */
 .completed-banner {
@@ -594,7 +705,7 @@ input:focus, select:focus, textarea:focus {
   background: linear-gradient(180deg, rgba(12,19,33,.98), rgba(8,13,24,.98)) !important;
 }
 
-.fmt-card, .btn, .btn-draft, .btn-approve, .add-btn {
+.fmt-card, .btn, .btn-draft, .btn-approve, .btn-rediarize, .add-btn {
   border-radius: 12px !important;
   border: 1px solid var(--line) !important;
   box-shadow: var(--btn-shadow);
@@ -604,7 +715,7 @@ input:focus, select:focus, textarea:focus {
   background: var(--dark-btn) !important;
   color: var(--g2) !important;
 }
-.fmt-card:hover, .btn:hover, .btn-draft:hover, .btn-approve:hover, .add-btn:hover {
+.fmt-card:hover, .btn:hover, .btn-draft:hover, .btn-approve:hover, .btn-rediarize:hover, .add-btn:hover {
   transform: translateY(-1px);
   filter: brightness(1.04);
 }
@@ -623,7 +734,7 @@ input:focus, select:focus, textarea:focus {
   background: rgba(10,18,32,.1);
 }
 
-.btn:active, .btn-draft:active, .btn-approve:active, .add-btn:active {
+.btn:active, .btn-draft:active, .btn-approve:active, .btn-rediarize:active, .add-btn:active {
   transform: translateY(2px) scale(.98);
   box-shadow: 0 8px 14px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.1), inset 0 -6px 12px rgba(0,0,0,.2);
 }
@@ -642,6 +753,11 @@ button[style*="background: var(--teal)"] {
 }
 .btn-ghost, .btn-draft, .add-btn {
   color: var(--g2) !important;
+}
+.btn-rediarize {
+  background: linear-gradient(180deg, rgba(94,69,25,.98), rgba(48,35,14,.98)) !important;
+  color: #ffd98a !important;
+  border-color: rgba(255,210,120,.28) !important;
 }
 
 .mic-zone { padding: 30px 24px; }
@@ -730,7 +846,8 @@ button[style*="background: var(--teal)"] {
       <span class="flag-pct" id="flagPct">0%</span>
       completado
     </div>
-    Dr. L. Montoya · <span id="clk">--:--</span>
+    <button class="sync-pill" id="syncPillD" onclick="openDesktopSyncModal()">Sync</button>
+    <span id="doctorNameHeader"></span> · <span id="clk">--:--</span>
   </div>
 </header>
 
@@ -755,13 +872,21 @@ button[style*="background: var(--teal)"] {
     </div>
     <div class="fsec-body">
       <div class="fg2">
-        <div class="fl fspan2"><label>Nombre completo</label><input type="text" id="f-nombre" value="María Elena Gutiérrez" oninput="syncHeader();updateCompletion()"></div>
+        <div class="fl fspan2"><label>Nombre completo</label><input type="text" id="f-nombre" value="María Elena Gutiérrez" oninput="syncHeader();updateCompletion()" autocomplete="off"></div>
         <div class="fl"><label>Fecha de nacimiento</label><input type="date" id="f-fnac" value="1971-03-15" onchange="updateCompletion()"></div>
         <div class="fl"><label>Sexo</label><select id="f-sexo" onchange="updateCompletion()"><option value="F" selected>Femenino</option><option value="M">Masculino</option></select></div>
         <div class="fl"><label>N° de expediente</label><input type="text" id="f-exp" class="mono" value="0042" oninput="updateCompletion()"></div>
         <div class="fl"><label>Tipo de visita</label><select id="f-visita" onchange="updateCompletion()"><option value="control" selected>Control</option><option value="primera">Primera visita</option><option value="flare">Reagudización</option><option value="procedimiento">Procedimiento</option></select></div>
         <div class="fl fspan2" style="position:relative"><label>Diagnóstico principal <span style="color:var(--g4);text-transform:none;letter-spacing:0">(CIE-10)</span></label><input type="text" id="f-diag" value="Artritis Reumatoide (M05.9)" autocomplete="off" oninput="cie10Suggest(this,'cie10-list-1');updateCompletion()" onfocus="cie10Suggest(this,'cie10-list-1')" onblur="setTimeout(()=>document.getElementById('cie10-list-1').style.display='none',200)"><div id="cie10-list-1" class="cie10-list"></div></div>
         <div class="fl fspan2" style="position:relative"><label>Diagnósticos secundarios <span style="color:var(--g4);text-transform:none;letter-spacing:0">(CIE-10)</span></label><input type="text" id="f-diag2" placeholder="Ej: HTA, DM2, Osteoporosis..." autocomplete="off" oninput="cie10Suggest(this,'cie10-list-2')" onfocus="cie10Suggest(this,'cie10-list-2')" onblur="setTimeout(()=>document.getElementById('cie10-list-2').style.display='none',200)"><div id="cie10-list-2" class="cie10-list"></div></div>
+        <div class="fl fspan2">
+          <label>Motivo de consulta</label>
+          <input type="text" id="f-motivo" placeholder="Ej: Control AR, ajuste de tratamiento">
+        </div>
+        <div class="fl fspan2">
+          <label>Notas adicionales</label>
+          <textarea id="f-notas" rows="2" placeholder="Observaciones del médico..."></textarea>
+        </div>
       </div>
     </div>
   </div>
@@ -834,6 +959,36 @@ button[style*="background: var(--teal)"] {
         <div class="fl"><label>Fecha de toma</label><input type="date" id="l-fecha" oninput="updateCompletion()"></div>
         <div class="fl"><label>Laboratorio</label><input type="text" id="l-lab" placeholder="Nombre del laboratorio"></div>
       </div>
+      <div class="sec-micro">DAS-28 PCR</div>
+      <div class="das-calc">
+        <div class="fl">
+          <label>Art. dolorosas (0-28)</label>
+          <input type="number" id="d-tender" min="0" max="28" value="" oninput="calcDas28()" class="mono">
+        </div>
+        <div class="fl">
+          <label>Art. inflamadas (0-28)</label>
+          <input type="number" id="d-swollen" min="0" max="28" value="" oninput="calcDas28()" class="mono">
+        </div>
+        <div class="fl">
+          <label>EVA Paciente (0-100)</label>
+          <input type="number" id="d-vas" min="0" max="100" value="" oninput="calcDas28()" class="mono">
+        </div>
+        <div class="fl">
+          <label>PCR (mg/L)</label>
+          <input type="number" id="d-pcr" min="0" value="" oninput="calcDas28()" class="mono">
+        </div>
+      </div>
+      <div class="das-result" id="das-result-box" style="display:none">
+        <div>
+          <div class="das-number" id="das-val">—</div>
+          <div class="das-label-act" id="das-act"></div>
+        </div>
+        <div style="flex:1">
+          <div class="das-track"><div class="das-track-fill"></div><div class="das-pin" id="das-pin"></div></div>
+          <div class="das-range"><span>Remisión</span><span>Baja</span><span>Moderada</span><span>Alta</span></div>
+        </div>
+        <div class="das-badge" id="das-badge"></div>
+      </div>
     </div>
   </div>
 
@@ -856,7 +1011,7 @@ button[style*="background: var(--teal)"] {
       </div>
       <div class="cb-actions">
         <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="go(2)">Ir a receta →</button>
-        <button class="btn btn-teal" style="font-size:11px;padding:5px 10px" onclick="window.print()">Imprimir</button>
+        <button class="btn btn-teal" style="font-size:11px;padding:5px 10px" onclick="printDraft()">Imprimir</button>
       </div>
     </div>
 
@@ -877,7 +1032,7 @@ button[style*="background: var(--teal)"] {
       <div class="api-body" id="apiBody">
         <div class="fl">
           <label>API Key de Google Gemini (gratuita)</label>
-          <input type="password" id="apiKeyInput" placeholder="AIzaSy..." style="font-family:'Geist Mono',monospace;font-size:12px" oninput="checkApiKey()">
+          <input type="password" id="apiKeyInput" placeholder="AIzaSy..." style="font-family:'Geist Mono',monospace;font-size:12px" oninput="checkApiKey()" autocomplete="new-password">
         </div>
         <div style="font-size:11px;color:var(--g4);margin-top:6px;line-height:1.5">Obtén tu key gratis en <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--teal);text-decoration:none">aistudio.google.com/app/apikey</a>. La key no se guarda en ningún servidor, solo vive en esta sesión.</div>
       </div>
@@ -934,7 +1089,7 @@ button[style*="background: var(--teal)"] {
     <div class="result-wrap" id="resultWrap"></div>
 
     <div class="result-actions" id="resultActs">
-      <button class="btn btn-ghost" onclick="resetDictado()">Volver a dictar</button>
+      <button class="btn btn-ghost" onclick="rediarizeNote()">Volver a diarizar</button>
     </div>
 
   </div>
@@ -958,7 +1113,10 @@ button[style*="background: var(--teal)"] {
           Imprimir
         </button>
       </div>
-      <button class="btn-approve" id="btnApprove" onclick="approveFinal()">Aprobar nota</button>
+      <div class="review-actions" id="reviewActions">
+        <button class="btn-rediarize" id="btnRediarize" onclick="rediarizeNote()">Volver a diarizar</button>
+        <button class="btn-approve" id="btnApprove" onclick="approveFinal()">Aprobar nota</button>
+      </div>
     </div>
 
     <!-- Section checklist -->
@@ -1007,7 +1165,7 @@ button[style*="background: var(--teal)"] {
     <div class="print-info"><div class="pt">Listo para imprimir</div><div class="ps">Nota clínica · Receta · Indicaciones</div></div>
     <div class="print-btns">
       <button class="btn btn-dark-inv" onclick="window.print()">Solo receta</button>
-      <button class="btn btn-inv" onclick="window.print()">Imprimir todo</button>
+      <button class="btn btn-inv" onclick="printDraft()">Imprimir todo</button>
     </div>
   </div>
 </div>
@@ -1017,7 +1175,7 @@ button[style*="background: var(--teal)"] {
 
 <!-- BOTTOM BAR -->
 <div class="btmbar">
-  <div class="btm-sig">Dr. <strong>L. Montoya</strong> · <span id="clkB">--:--</span></div>
+  <div class="btm-sig"><span id="doctorNameBottom"></span> · <span id="clkB">--:--</span></div>
   <div class="btm-actions">
     <button class="btn btn-ghost">Nueva consulta</button>
     <button class="btn btn-teal" onclick="go(1);syncCtx()">Ir a dictar →</button>
@@ -1027,7 +1185,43 @@ button[style*="background: var(--teal)"] {
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<!-- Sync Modal -->
+<div class="sync-modal-bg" id="syncModalD" onclick="if(event.target===this)closeDesktopSyncModal()">
+  <div class="sync-modal">
+    <h3>Sincronizar móvil con escritorio</h3>
+    <p>Genera el QR en la PC y escanéalo con el móvil. El celular abrirá DrNoteAI Mobile con el código cargado; solo toca “Crear respuesta”, cópiala y pégala aquí para completar el pareo.</p>
+    <div class="sync-qr-wrap" id="syncQrWrapD">
+      <div class="sync-qr" id="syncQrD"></div>
+      <div class="sync-qr-copy">
+        <strong>Escanea este QR con el celular</strong>
+        <span>Abre la versión móvil con la solicitud de Sync precargada. Si el QR no escanea, copia el código PC manualmente.</span>
+        <code id="syncMobileLinkD"></code>
+      </div>
+    </div>
+    <div class="sync-grid">
+      <div class="sync-box">
+        <label>Código de la PC para el móvil</label>
+        <textarea id="syncOfferD" readonly placeholder="Presiona Generar código PC"></textarea>
+      </div>
+      <div class="sync-box">
+        <label>Respuesta generada en el móvil</label>
+        <textarea id="syncAnswerD" placeholder="Pega aquí la respuesta del móvil"></textarea>
+      </div>
+    </div>
+    <div id="syncStatusD" style="font-size:11px;color:var(--g4);margin-top:10px">Sync desconectado.</div>
+    <div class="sync-actions">
+      <button onclick="copyDesktopSyncOffer()">Copiar código PC</button>
+      <button class="primary" onclick="createDesktopSyncOffer()">Generar código PC</button>
+      <button class="primary" onclick="acceptMobileSyncAnswer()">Conectar respuesta</button>
+      <button onclick="closeDesktopSyncModal()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <script>
+// ── DOCTOR NAME ──
+const DOCTOR_NAME = 'Dr. L. Montoya';
+
 // ── TABS ──
 const tabs = document.querySelectorAll('.tab');
 const screens = document.querySelectorAll('.screen');
@@ -1043,7 +1237,13 @@ function toggleChip(el){ el.classList.toggle('on'); }
 
 // ── CLOCK ──
 function tick(){ const t=new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'}); document.getElementById('clk').textContent=t; document.getElementById('clkB').textContent=t; }
-tick(); setInterval(tick,15000);
+tick(); const clockInt = setInterval(tick,10000);
+
+// ── INJECT DOCTOR NAME ──
+(function(){
+  const h=document.getElementById('doctorNameHeader'); if(h) h.textContent=DOCTOR_NAME;
+  const b=document.getElementById('doctorNameBottom'); if(b) b.textContent=DOCTOR_NAME;
+})();
 
 // ── IMC ──
 function calcIMC(){ const p=parseFloat(document.getElementById('f-peso').value),t=parseFloat(document.getElementById('f-talla').value)/100; if(p&&t) document.getElementById('f-imc').value=(p/(t*t)).toFixed(1); }
@@ -1069,10 +1269,13 @@ function calcDas28(){
 
 // ── SYNC HEADER ──
 function syncHeader(){
-  const n=document.getElementById('f-nombre').value||'Paciente';
-  const w=n.trim().split(' ');
-  document.getElementById('ptAv').textContent=(w[0][0]+(w[1]?w[1][0]:'')).toUpperCase().substring(0,2);
-  document.getElementById('ptName').textContent=n;
+  const n=(document.getElementById('f-nombre')?.value||'').trim();
+  const w=n.split(' ').filter(Boolean);
+  const initials=w.slice(0,2).map(x=>x[0]).join('').toUpperCase();
+  document.getElementById('ptAv').textContent=initials||'?';
+  document.getElementById('ptName').textContent=n||'Paciente';
+  const nameEl=document.getElementById('ctx-name');
+  if(nameEl) nameEl.textContent=n||'Paciente';
 }
 
 function syncCtx(){
@@ -1131,33 +1334,7 @@ function toggleConsultTimer(){
 // ── API CONFIG ──
 function toggleApi(){ document.getElementById('apiBody').classList.toggle('open'); }
 let apiValidTimer=null, apiValidated=false;
-function checkApiKey(){
-  const k=document.getElementById('apiKeyInput').value.trim();
-  const st=document.getElementById('apiStatus');
-  apiValidated=false;
-  if(!k){ st.textContent='No configurada — usando demo'; st.style.color=''; return; }
-  if(!k.startsWith('AIza')){ st.textContent='✗ Formato invalido (debe empezar con AIza)'; st.style.color='var(--red)'; return; }
-  st.textContent='⏳ Validando key...'; st.style.color='var(--amber)';
-  clearTimeout(apiValidTimer);
-  apiValidTimer=setTimeout(()=>validateGeminiKey(k),500);
-}
-async function validateGeminiKey(k){
-  const st=document.getElementById('apiStatus');
-  try{
-    const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+encodeURIComponent(k));
-    const d=await r.json();
-    if(!r.ok){
-      const msg=(d && d.error && d.error.message) ? d.error.message : ('HTTP '+r.status);
-      st.textContent='✗ Key invalida: '+msg; st.style.color='var(--red)'; apiValidated=false; return;
-    }
-    const hasFlash=(d.models||[]).some(m=>/gemini-2\.0-flash|gemini-1\.5-flash/.test(m.name||''));
-    st.textContent='✓ Gemini conectada — '+(hasFlash?'gemini-2.0-flash listo':(d.models?d.models.length+' modelos':'key valida'));
-    st.style.color='var(--teal)'; apiValidated=true;
-    showToast('API Gemini validada ✓');
-  }catch(e){
-    st.textContent='✗ Error de red: '+e.message; st.style.color='var(--red)'; apiValidated=false;
-  }
-}
+// (checkApiKey and validateGeminiKey defined later as final versions)
 
 // ── FORMAT ──
 const GEMINI_MODEL_CHAIN=['gemini-1.5-flash-latest','gemini-1.5-flash','gemini-1.5-flash-8b','gemini-2.0-flash','gemini-flash-latest'];
@@ -1169,21 +1346,7 @@ function getGeminiModelChain(){
 function getGeminiModelLabel(model){
   return (model||'').replace(/^gemini-/,'');
 }
-function setApiConnectedUI(connected, model){
-  apiValidated=connected;
-  apiConnected=connected;
-  const sec=document.getElementById('apiSec');
-  const badge=document.getElementById('apiOkBadge');
-  if(sec) sec.style.display=connected ? 'none' : '';
-  if(badge){
-    if(connected){
-      badge.textContent='✓ API OK · '+getGeminiModelLabel(model);
-      badge.style.display='inline-flex';
-    }else{
-      badge.style.display='none';
-    }
-  }
-}
+// setApiConnectedUI defined later as final version
 function isGeminiAuthError(msg,status){
   return status===403 || /api key not valid|invalid api key|permission_denied|permission denied|api has not been enabled|forbidden/i.test(msg||'');
 }
@@ -1191,10 +1354,10 @@ function isGeminiRetryableError(msg,status){
   return status===429 || status>=500 || /quota|resource_exhausted|rate limit|too many requests|unavailable|overloaded|model .*not found|not found for api version|does not exist|unsupported/i.test(msg||'');
 }
 async function callGeminiModel(apiKey, model, reqBody){
-  const url='https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent?key='+encodeURIComponent(apiKey);
+  const url='https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent';
   let resp, data={};
   try{
-    resp=await fetch(url,{ method:'POST', headers:{'Content-Type':'application/json'}, body:reqBody });
+    resp=await fetch(url,{ method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key':apiKey}, body:reqBody });
     try{ data=await resp.json(); }catch(_){ data={}; }
   }catch(err){
     return {ok:false,status:0,data:null,errorMessage:err.message||'Error de red'};
@@ -1203,52 +1366,7 @@ async function callGeminiModel(apiKey, model, reqBody){
   const errorMessage=(data && data.error && data.error.message) ? data.error.message : ('HTTP '+resp.status);
   return {ok:resp.ok,status:resp.status,data,text,errorMessage};
 }
-function checkApiKey(){
-  const k=document.getElementById('apiKeyInput').value.trim();
-  const st=document.getElementById('apiStatus');
-  setApiConnectedUI(false);
-  if(!k){ st.textContent='No configurada â€” usando demo'; st.style.color=''; return; }
-  if(!k.startsWith('AIza')){ st.textContent='âœ— Formato invalido (debe empezar con AIza)'; st.style.color='var(--red)'; return; }
-  st.textContent='â³ Validando key...'; st.style.color='var(--amber)';
-  clearTimeout(apiValidTimer);
-  apiValidTimer=setTimeout(()=>validateGeminiKey(k),500);
-}
-async function validateGeminiKey(k){
-  const st=document.getElementById('apiStatus');
-  try{
-    const reqBody=JSON.stringify({
-      contents:[{role:'user',parts:[{text:'Responde solo OK'}]}],
-      generationConfig:{temperature:0,maxOutputTokens:4}
-    });
-    let lastErr='Sin respuesta';
-    for(const model of getGeminiModelChain()){
-      const result=await callGeminiModel(k, model, reqBody);
-      if(result.ok){
-        window.__preferredGeminiModel=model;
-        st.textContent='âœ“ API validada â€” '+getGeminiModelLabel(model);
-        st.style.color='var(--teal)';
-        setApiConnectedUI(true, model);
-        showToast('API Gemini validada con '+getGeminiModelLabel(model)+' âœ“');
-        return;
-      }
-      lastErr=result.errorMessage;
-      if(isGeminiAuthError(result.errorMessage, result.status)){
-        st.textContent='âœ— Key invalida: '+result.errorMessage;
-        st.style.color='var(--red)';
-        apiValidated=false;
-        return;
-      }
-      if(!isGeminiRetryableError(result.errorMessage, result.status)) break;
-    }
-    st.textContent='âœ— Sin cupo o sin acceso usable: '+lastErr;
-    st.style.color='var(--red)';
-    apiValidated=false;
-  }catch(e){
-    st.textContent='âœ— Error de red: '+e.message;
-    st.style.color='var(--red)';
-    apiValidated=false;
-  }
-}
+// checkApiKey and validateGeminiKey defined later as final versions
 
 let currentFmt='control';
 const fmtNames={control:'nota de control',soap:'SOAP',hc:'historia clínica',eco:'nota de procedimiento',interconsulta:'interconsulta',libre:'nota libre'};
@@ -1301,86 +1419,48 @@ function toggleRec(){ if(recState==='idle') startRec(); else if(recState==='reco
 
 function clearTranscript(){ liveTranscript=''; const ta=document.getElementById('transcriptArea'); if(ta) ta.value=''; }
 
-function startRec(){
-  recState='recording'; dictSecs=0; liveTranscript='';
-  document.getElementById('apiError').style.display='none';
-  document.getElementById('transcriptBox').style.display='block';
-  const ta=document.getElementById('transcriptArea'); if(ta) ta.value='';
-  const srSt=document.getElementById('srStatus');
-  document.getElementById('micBtn').classList.replace('idle','recording');
-  document.getElementById('wave').classList.add('show');
-  document.getElementById('micLbl').textContent='Grabando — toca para detener';
-  document.getElementById('rtimer').classList.add('show');
-  timerInt=setInterval(()=>{ dictSecs++; document.getElementById('rtimer').textContent=Math.floor(dictSecs/60)+':'+(dictSecs%60).toString().padStart(2,'0'); },1000);
+// startRec defined later as final version
 
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){
-    srSt.textContent='⚠ Tu navegador no soporta reconocimiento de voz. Usa Chrome/Edge o escribe el dictado manualmente abajo.';
-    srSt.style.color='var(--amber)';
-    return;
-  }
+async function stopRec(){
+  if(recState!=='recording') return;
+  recState='processing';
   try{
-    recognition=new SR();
-    recognition.lang='es-BO';
-    recognition.continuous=true;
-    recognition.interimResults=true;
-    let finalTxt='';
-    recognition.onresult=e=>{
-      let interim='';
-      for(let i=e.resultIndex;i<e.results.length;i++){
-        const tr=e.results[i][0].transcript;
-        if(e.results[i].isFinal) finalTxt+=tr+' '; else interim+=tr;
-      }
-      liveTranscript=finalTxt;
-      if(ta) ta.value=finalTxt+(interim?('  … '+interim):'');
-    };
-    recognition.onerror=ev=>{
-      srSt.textContent='⚠ Error de reconocimiento: '+ev.error+'. Puedes escribir manualmente abajo.';
-      srSt.style.color='var(--red)';
-    };
-    recognition.onend=()=>{ srSt.textContent='🔴 Reconocimiento detenido.'; srSt.style.color='var(--g4)'; };
-    recognition.start();
-    srSt.textContent='🎙 Escuchando en es-BO... habla normal.';
-    srSt.style.color='var(--teal)';
-  }catch(e){
-    srSt.textContent='⚠ No se pudo iniciar: '+e.message;
-    srSt.style.color='var(--red)';
-  }
-}
+    clearInterval(timerInt);
+    if(recognition){ recognition.stop(); recognition=null; }
+    document.getElementById('micBtn').classList.replace('recording','idle');
+    document.getElementById('wave').classList.remove('show');
+    document.getElementById('micLbl').textContent='';
+    document.getElementById('rtimer').classList.remove('show');
+    document.getElementById('procFmt').textContent=fmtNames[currentFmt];
+    document.getElementById('proc').classList.add('show');
+    document.getElementById('metricDictado').textContent=Math.floor(dictSecs/60)+':'+(dictSecs%60).toString().padStart(2,'0');
+    document.getElementById('metricFmt').textContent=fmtNames[currentFmt];
 
-function stopRec(){
-  recState='processing'; clearInterval(timerInt);
-  if(recognition){ recognition.stop(); recognition=null; }
-  document.getElementById('micBtn').classList.replace('recording','idle');
-  document.getElementById('wave').classList.remove('show');
-  document.getElementById('micLbl').textContent='';
-  document.getElementById('rtimer').classList.remove('show');
-  document.getElementById('procFmt').textContent=fmtNames[currentFmt];
-  document.getElementById('proc').classList.add('show');
-  document.getElementById('metricDictado').textContent=Math.floor(dictSecs/60)+':'+(dictSecs%60).toString().padStart(2,'0');
-  document.getElementById('metricFmt').textContent=fmtNames[currentFmt];
-
-  const ctx=buildContext();
-  const apiKey=document.getElementById('apiKeyInput').value.trim();
-  // Priorizar el texto del textarea (editable) sobre liveTranscript
-  const ta=document.getElementById('transcriptArea');
-  const finalTxt=(ta && ta.value.trim()) ? ta.value.trim() : liveTranscript.trim();
-  if(!finalTxt){
-    document.getElementById('proc').classList.remove('show');
-    showApiError('No se capturó dictado. Escribe o pega el texto en el área de transcripción y vuelve a presionar el micrófono (o genera con texto manual).');
-    recState='done';
-    return;
-  }
-  if(apiKey.startsWith('AIza')){
-    generateNote(ctx, finalTxt, currentFmt, apiKey);
-  } else {
-    // Sin key: mostrar demo pero avisar
-    setTimeout(()=>{
+    const ctx=buildContext();
+    const apiKey=document.getElementById('apiKeyInput').value.trim();
+    const ta=document.getElementById('transcriptArea');
+    const finalTxt=(ta && ta.value.trim()) ? ta.value.trim() : liveTranscript.trim();
+    if(!finalTxt){
       document.getElementById('proc').classList.remove('show');
-      showApiError('Modo DEMO (sin API key). Los resultados son estáticos, no se está diarizando. Configura tu Gemini key arriba para procesar tu dictado real.');
-      buildResult(fmtSections[currentFmt]||fmtSections.control);
+      showApiError('No se capturó dictado. Escribe o pega el texto en el área de transcripción y vuelve a presionar el micrófono (o genera con texto manual).');
       recState='done';
-    },800);
+      return;
+    }
+    if(apiKey.startsWith('AIza')){
+      await generateNote(ctx, finalTxt, currentFmt, apiKey);
+    } else {
+      setTimeout(()=>{
+        document.getElementById('proc').classList.remove('show');
+        showApiError('Modo DEMO (sin API key). Los resultados son estáticos, no se está diarizando. Configura tu Gemini key arriba para procesar tu dictado real.');
+        buildResult(fmtSections[currentFmt]||fmtSections.control);
+        recState='done';
+      },800);
+    }
+  }catch(e){
+    showApiError('Error inesperado: '+e.message);
+  }finally{
+    document.querySelector('.processing')?.classList.remove('show');
+    if(recState==='processing') recState='idle';
   }
 }
 function resetRecUiDesktop(message, color){
@@ -1489,65 +1569,7 @@ async function validateGeminiKey(k){
   }
   setApiBadgeDesktop('error','Sin cupo o acceso usable');
 }
-async function startRec(){
-  if(recState!=='idle') return;
-  document.getElementById('apiError').style.display='none';
-  document.getElementById('transcriptBox').style.display='block';
-  const ta=document.getElementById('transcriptArea');
-  if(ta) ta.value='';
-  const srSt=document.getElementById('srStatus');
-  srSt.textContent='Solicitando acceso al micrófono...';
-  srSt.style.color='var(--amber)';
-  const micAccess=await ensureMicAccessDesktop();
-  if(!micAccess.ok){
-    resetRecUiDesktop(micAccess.error,'var(--red)');
-    return;
-  }
-  recState='recording';
-  dictSecs=0;
-  liveTranscript='';
-  document.getElementById('micBtn').classList.remove('idle');
-  document.getElementById('micBtn').classList.add('recording');
-  document.getElementById('wave').classList.add('show');
-  document.getElementById('micLbl').textContent='Grabando — toca para detener';
-  document.getElementById('rtimer').classList.add('show');
-  timerInt=setInterval(()=>{
-    dictSecs++;
-    document.getElementById('rtimer').textContent=Math.floor(dictSecs/60)+':'+(dictSecs%60).toString().padStart(2,'0');
-  },1000);
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){
-    resetRecUiDesktop('Tu navegador no soporta reconocimiento de voz. Usa Chrome o Edge.','var(--amber)');
-    return;
-  }
-  try{
-    recognition=new SR();
-    recognition.lang='es-BO';
-    recognition.continuous=true;
-    recognition.interimResults=true;
-    let finalTxt='';
-    recognition.onresult=e=>{
-      let interim='';
-      for(let i=e.resultIndex;i<e.results.length;i++){
-        const tr=e.results[i][0].transcript;
-        if(e.results[i].isFinal) finalTxt+=tr+' '; else interim+=tr;
-      }
-      liveTranscript=finalTxt;
-      if(ta) ta.value=finalTxt+(interim?('  … '+interim):'');
-    };
-    recognition.onerror=ev=>{
-      resetRecUiDesktop('Error de reconocimiento: '+ev.error,'var(--red)');
-    };
-    recognition.onend=()=>{
-      if(recState==='recording') resetRecUiDesktop('El reconocimiento se detuvo. Intenta de nuevo.','var(--amber)');
-    };
-    recognition.start();
-    srSt.textContent='Escuchando en es-BO...';
-    srSt.style.color='var(--teal)';
-  }catch(e){
-    resetRecUiDesktop('No se pudo iniciar: '+e.message,'var(--red)');
-  }
-}
+// startRec defined below as final authoritative version
 function showApiError(msg){
   const el=document.getElementById('apiError');
   el.textContent=msg; el.style.display='block';
@@ -1640,14 +1662,14 @@ async function generateNote(ctx, transcript, fmt, apiKey){
     try{ parsed=JSON.parse(clean); }catch(pe){ throw new Error('JSON inválido de Gemini: '+clean.slice(0,120)); }
     document.getElementById('proc').classList.remove('show');
     var secDefs = fmtSections[fmt]||fmtSections.control;
-    var merged = secDefs.map(function(s,i){
-      var api = (parsed.secciones && parsed.secciones[i]) ? parsed.secciones[i] : {};
+    var merged = secDefs.map(function(s){
+      var api = (parsed.secciones||[]).find(function(a){ return a.letra===s.l; })||{};
       return Object.assign({}, s, {txt: api.contenido||s.txt, conf: api.confianza||'media'});
     });
     buildResult(merged); recState='done';
     showToast('Nota generada con '+usedModel+' ✓');
   }catch(e){
-    console.error('API error:', e);
+    console.warn('API error:', e.message||'unknown');
     document.getElementById('proc').classList.remove('show');
     showApiError('Error al generar con Gemini: '+e.message+'. Mostrando demo.');
     buildResult(fmtSections[fmt]||fmtSections.control); recState='done';
@@ -1662,6 +1684,7 @@ function buildResult(sections){
   checkItemsEl.innerHTML='';
 
   sections.forEach((s,idx)=>{
+    try{
     const txt=s.txt||'';
     const conf=s.conf||'alta';
     const wordCount=txt.trim().split(/\s+/).filter(Boolean).length;
@@ -1677,23 +1700,34 @@ function buildResult(sections){
     const div=document.createElement('div');
     div.className='rsec '+semClass;
     div.id='rsec-'+idx;
-    div.innerHTML=`
-      <div class="rsec-head">
-        <div class="rsec-left">
-          <div class="rsec-letter">${s.l.substring(0,3)}</div>
-          <span class="rsec-name">${s.n}</span>
-        </div>
-        <div class="rsec-right">
-          <div class="sem-dot" title="${confLabel}"></div>
-          <span class="conf-badge ${confClass}">${confLabel}</span>
-          <span class="ai-tag">IA · editable</span>
-        </div>
-      </div>
-      <div class="missing-alert ${missingMsg?'show':''}">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        ${missingMsg}
-      </div>
-      <textarea rows="${Math.max(2,Math.ceil(txt.length/90))}" oninput="evalSection(${idx},this.value)">${txt}</textarea>`;
+
+    // Build head safely
+    const head=document.createElement('div'); head.className='rsec-head';
+    const left=document.createElement('div'); left.className='rsec-left';
+    const letterEl=document.createElement('div'); letterEl.className='rsec-letter'; letterEl.textContent=s.l.substring(0,3);
+    const nameEl=document.createElement('span'); nameEl.className='rsec-name'; nameEl.textContent=s.n;
+    left.appendChild(letterEl); left.appendChild(nameEl);
+    const right=document.createElement('div'); right.className='rsec-right';
+    const dot=document.createElement('div'); dot.className='sem-dot'; dot.title=confLabel;
+    const badge=document.createElement('span'); badge.className='conf-badge '+confClass; badge.textContent=confLabel;
+    const aiTag=document.createElement('span'); aiTag.className='ai-tag'; aiTag.textContent='IA · editable';
+    right.appendChild(dot); right.appendChild(badge); right.appendChild(aiTag);
+    head.appendChild(left); head.appendChild(right);
+    div.appendChild(head);
+
+    // Missing alert
+    const alert=document.createElement('div'); alert.className='missing-alert'+(missingMsg?' show':'');
+    alert.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+    if(missingMsg){ const mt=document.createTextNode(' '+missingMsg); alert.appendChild(mt); }
+    div.appendChild(alert);
+
+    // Textarea — set .value not innerHTML
+    const ta=document.createElement('textarea');
+    ta.rows=Math.max(2,Math.ceil(txt.length/90));
+    ta.setAttribute('oninput','evalSection('+idx+',this.value)');
+    ta.value=txt;
+    div.appendChild(ta);
+
     wrap.appendChild(div);
 
     // Checklist item
@@ -1701,18 +1735,19 @@ function buildResult(sections){
     const ci=document.createElement('div');
     ci.className='check-item'+(isDone?' done':'');
     ci.id='ci-'+idx;
-    ci.innerHTML=`
-      <div class="ci-icon" id="cicon-${idx}">
-        ${isDone?`<svg viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2 2 4-3"/></svg>`:''}
-      </div>
-      <span>${s.n}</span>
-      <span style="margin-left:auto;font-size:10px;color:${semClass==='sem-ok'?'var(--teal)':semClass==='sem-med'?'var(--amber)':'var(--red)'}">${confLabel}</span>`;
+    const ciIcon=document.createElement('div'); ciIcon.className='ci-icon'; ciIcon.id='cicon-'+idx;
+    if(isDone) ciIcon.innerHTML='<svg viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2 2 4-3"/></svg>';
+    const ciName=document.createElement('span'); ciName.textContent=s.n;
+    const ciConf=document.createElement('span'); ciConf.style.cssText='margin-left:auto;font-size:10px;color:'+(semClass==='sem-ok'?'var(--teal)':semClass==='sem-med'?'var(--amber)':'var(--red)'); ciConf.textContent=confLabel;
+    ci.appendChild(ciIcon); ci.appendChild(ciName); ci.appendChild(ciConf);
     checkItemsEl.appendChild(ci);
+    }catch(e){ console.warn('Section render error at index '+idx, e.message); }
   });
 
   wrap.classList.add('show');
   document.getElementById('resultActs').classList.add('show');
   document.getElementById('micLbl').textContent='Nota generada';
+  document.getElementById('reviewActions').classList.add('show');
   updateApproval(sections.length);
 }
 
@@ -1760,6 +1795,18 @@ function updateApproval(total){
   btn.textContent=pct>=75?'✓ Aprobar nota':'Aprobar nota ('+pct+'%)';
 }
 
+// ── XSS ESCAPE ──
+function escapeHtml(str){
+  return String(str||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ── DRAFT PURGE ──
+function purgeOldDrafts(){
+  const keys=Object.keys(localStorage).filter(k=>k.startsWith('dictaai_draft_'));
+  keys.sort().slice(0,Math.max(0,keys.length-5)).forEach(k=>localStorage.removeItem(k));
+}
+purgeOldDrafts();
+
 // ── SAVE DRAFT ──
 function saveDraft(){
   const sections=[];
@@ -1772,7 +1819,122 @@ function saveDraft(){
   showToast('Borrador guardado en este dispositivo');
 }
 
-function printDraft(){ window.print(); }
+function printDraft(){
+  openSoapPrintWindow(getDesktopSoapPrintData());
+}
+
+function escapePrintHtml(value){
+  return String(value||'').replace(/[&<>"']/g,function(ch){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+  });
+}
+
+function getFieldValue(id, fallback){
+  const el=document.getElementById(id);
+  return (el && typeof el.value!=='undefined' && el.value) ? el.value : (fallback||'');
+}
+
+function getSelectText(id){
+  const el=document.getElementById(id);
+  if(!el) return '';
+  return el.options && el.selectedIndex>=0 ? el.options[el.selectedIndex].text : (el.value||'');
+}
+
+function calcAgeFromDate(dateValue){
+  if(!dateValue) return '';
+  const birth=new Date(dateValue);
+  if(isNaN(birth.getTime())) return '';
+  const today=new Date();
+  let age=today.getFullYear()-birth.getFullYear();
+  const m=today.getMonth()-birth.getMonth();
+  if(m<0 || (m===0 && today.getDate()<birth.getDate())) age--;
+  return age>0 ? age+' anos' : '';
+}
+
+function collectSoapPrintSections(){
+  const soap={s:'',o:'',a:'',p:''};
+  const fallback=[];
+  document.querySelectorAll('[id^="rsec-"]').forEach(function(section){
+    const nameEl=section.querySelector('.rsec-name');
+    const txtEl=section.querySelector('textarea');
+    const name=(nameEl&&nameEl.textContent||'').toLowerCase();
+    const text=(txtEl&&txtEl.value||'').trim();
+    if(!text) return;
+    fallback.push({name:name,text:text});
+    if(/subjet|evol|anam|motivo|historia/.test(name)) soap.s+=(soap.s?'\n\n':'')+text;
+    else if(/objet|examen|fisic|hallazgo|tecnica/.test(name)) soap.o+=(soap.o?'\n\n':'')+text;
+    else if(/anal|diagn|conclusion|impresion/.test(name)) soap.a+=(soap.a?'\n\n':'')+text;
+    else if(/plan|trat|solicitud|indicacion|receta/.test(name)) soap.p+=(soap.p?'\n\n':'')+text;
+  });
+  if(!soap.s && fallback[0]) soap.s=fallback[0].text;
+  if(!soap.o && fallback[1]) soap.o=fallback[1].text;
+  if(!soap.a && fallback[2]) soap.a=fallback[2].text;
+  if(!soap.p && fallback[3]) soap.p=fallback[3].text;
+  return soap;
+}
+
+function getDesktopSoapPrintData(){
+  const now=new Date();
+  const fnac=getFieldValue('f-fnac','');
+  const pas=getFieldValue('f-pas','');
+  const pad=getFieldValue('f-pad','');
+  const vitals=[
+    {k:'PA',v:(pas||pad)?((pas||'___')+'/'+(pad||'___')+' mmHg'):'___/___ mmHg'},
+    {k:'FC',v:(getFieldValue('f-fc','')||'___')+' lpm'},
+    {k:'FR',v:'___ rpm'},
+    {k:'Temp',v:(getFieldValue('f-temp','')||'___')+' C'},
+    {k:'SatO2',v:(getFieldValue('f-sat','')||'___')+' %'},
+    {k:'Peso',v:(getFieldValue('f-peso','')||'___')+' kg'},
+    {k:'Talla',v:(getFieldValue('f-talla','')||'___')+' cm'},
+    {k:'IMC',v:(getFieldValue('f-imc','')||'___')+' kg/m2'}
+  ];
+  return {
+    patient:getFieldValue('f-nombre',document.getElementById('ptName').textContent),
+    record:getFieldValue('f-exp',''),
+    birth:fnac,
+    age:calcAgeFromDate(fnac),
+    sex:getSelectText('f-sexo'),
+    visit:getSelectText('f-visita'),
+    dx:getFieldValue('f-diag',''),
+    dx2:getFieldValue('f-diag2',''),
+    date:now.toLocaleDateString('es-BO'),
+    time:now.toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit'}),
+    doctor:DOCTOR_NAME,
+    duration:document.getElementById('ctTime').textContent,
+    dictation:document.getElementById('metricDictado').textContent,
+    vitals:vitals,
+    soap:collectSoapPrintSections()
+  };
+}
+
+function buildSoapPrintHtml(data){
+  const soap=data.soap||{};
+  const soapRows=[
+    ['S','Subjetivo',soap.s],
+    ['O','Objetivo',soap.o],
+    ['A','Analisis',soap.a],
+    ['P','Plan',soap.p]
+  ];
+  const vitals=(data.vitals||[]).map(function(item){
+    return '<div class="vital"><span>'+escapePrintHtml(item.k)+'</span><strong>'+escapePrintHtml(item.v)+'</strong></div>';
+  }).join('');
+  const sections=soapRows.map(function(row){
+    const body=row[2] ? escapePrintHtml(row[2]) : '&nbsp;';
+    return '<section class="soap-section"><div class="soap-title"><b>'+row[0]+'</b><span>'+row[1]+'</span></div><div class="soap-text">'+body+'</div></section>';
+  }).join('');
+  return '<!doctype html><html><head><meta charset="utf-8"><title>Nota SOAP - DrNoteAI</title><style>'+
+    '@page{size:A4;margin:10mm}*{box-sizing:border-box}body{margin:0;background:#f3f4ee;color:#263238;font-family:Arial,Helvetica,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}.sheet{width:190mm;min-height:277mm;margin:0 auto;background:#fffef9;position:relative;overflow:hidden;padding:0 11mm 12mm;border:1px solid #dde4de}.sheet:before{content:"";position:absolute;inset:40mm -20mm auto auto;width:120mm;height:120mm;border:1px solid rgba(6,91,92,.08);border-radius:50%;background:radial-gradient(circle,rgba(6,91,92,.08),transparent 62%);z-index:0}.hero{height:34mm;margin:0 -11mm 8mm;padding:9mm 13mm;background:#f0f2ea;border-bottom:2px solid #0f6668;position:relative;overflow:hidden}.brand{position:absolute;right:13mm;top:8mm;color:#075a5d;text-align:left}.brand h1{font-size:26pt;letter-spacing:-1px;margin:0;font-weight:800}.brand p{font-size:12pt;margin:3mm 0 0;color:#42474b}.brand .tag{border-top:1px solid #0f6668;border-bottom:1px solid #0f6668;margin-top:5mm;padding:2mm 0;font-style:italic}.badge{position:absolute;right:13mm;bottom:8mm;border:1px dashed #0f6668;padding:3mm 5mm;font-weight:700;color:#0f6668;letter-spacing:.12em}.wave{position:absolute;left:-18mm;top:-6mm;width:125mm;height:44mm;opacity:.62}.docicon{position:absolute;left:82mm;top:11mm;width:30mm;height:26mm;border:1px solid #0f6668;background:repeating-linear-gradient(90deg,transparent 0 7mm,rgba(15,102,104,.28) 7.2mm 7.5mm),repeating-linear-gradient(0deg,transparent 0 5mm,rgba(15,102,104,.22) 5.2mm 5.4mm)}.content{position:relative;z-index:1}.info{background:#edf3f4;border-left:4px solid #0f6668;padding:5mm 6mm;margin-bottom:6mm;display:grid;grid-template-columns:1.2fr .8fr .7fr;gap:4mm 7mm}.field label{display:block;color:#607078;text-transform:uppercase;font-size:7.2pt;letter-spacing:.08em;margin-bottom:1mm}.field div{font-size:10.5pt;border-bottom:1px solid rgba(38,50,56,.45);min-height:5mm;padding-bottom:1mm}.vitals{display:grid;grid-template-columns:repeat(4,1fr);gap:2.4mm;margin:0 0 6mm}.vital{border:1px solid #cddbd8;background:#f7faf8;padding:2.5mm 3mm}.vital span{display:block;font-size:7pt;color:#657178;text-transform:uppercase;letter-spacing:.08em}.vital strong{font-size:10pt;color:#263238}.soap-section{break-inside:avoid;margin-bottom:5.5mm}.soap-title{display:flex;align-items:center;gap:3mm;color:#0f6668;text-transform:uppercase;letter-spacing:.08em;font-weight:800;margin-bottom:2mm}.soap-title b{display:inline-flex;align-items:center;justify-content:center;width:8mm;height:8mm;border-radius:50%;background:#0f6668;color:#fff}.soap-title span{font-size:12pt}.soap-text{white-space:pre-wrap;font-size:10.5pt;line-height:1.55;min-height:24mm;padding:1mm 0 0;background:repeating-linear-gradient(to bottom,transparent 0 7.4mm,rgba(74,120,139,.45) 7.55mm 7.8mm)}.footer-note{text-align:center;color:#667276;font-size:8.5pt;margin:7mm 0 12mm}.signatures{display:grid;grid-template-columns:1fr 1fr;gap:26mm;margin-top:11mm}.sig{text-align:center;color:#505b61;font-size:10pt}.sig .line{border-top:1px solid #6f777a;height:10mm}.sig small{display:block;margin-top:1mm;color:#6b767b}.side-text{position:absolute;right:2mm;top:53mm;writing-mode:vertical-rl;color:#0f6668;font-size:7pt;letter-spacing:.04em}.stamp{height:18mm;border:1px dashed #9aa8a6;margin-top:4mm;display:flex;align-items:center;justify-content:center;color:#8a9795;font-size:8pt}@media print{body{background:#fff}.sheet{border:none;margin:0;width:100%;min-height:277mm}}'+
+    '</style></head><body><main class="sheet"><header class="hero"><svg class="wave" viewBox="0 0 520 190" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 75 C70 10 105 165 170 92 C235 20 280 155 345 86 C405 24 455 86 520 76" stroke="#172024" stroke-width="1.4"/><path d="M0 96 C80 18 112 178 182 103 C244 38 292 155 354 98 C410 48 455 98 520 92" stroke="#172024" stroke-width="1"/><path d="M0 116 C78 42 130 169 188 119 C250 64 292 145 360 112 C420 82 462 115 520 107" stroke="#172024" stroke-width=".8" opacity=".75"/><path d="M0 137 C84 75 128 168 198 132 C270 95 300 136 365 128 C430 120 470 130 520 122" stroke="#172024" stroke-width=".7" opacity=".5"/></svg><div class="docicon"></div><div class="brand"><h1>DrNoteAI</h1><p>El copiloto inteligente de la consulta medica.</p><div class="tag">Menos administracion, mas medicina.</div></div><div class="badge">NOTA SOAP</div></header><div class="side-text">DrNoteAI SOAP</div><section class="content"><div class="info"><div class="field"><label>Paciente</label><div>'+escapePrintHtml(data.patient)+'</div></div><div class="field"><label>Fecha</label><div>'+escapePrintHtml(data.date)+'</div></div><div class="field"><label>Hora</label><div>'+escapePrintHtml(data.time)+'</div></div><div class="field"><label>Fecha nacimiento / edad</label><div>'+escapePrintHtml([data.birth,data.age].filter(Boolean).join(' - '))+'</div></div><div class="field"><label>Sexo</label><div>'+escapePrintHtml(data.sex)+'</div></div><div class="field"><label>Expediente</label><div>'+escapePrintHtml(data.record)+'</div></div><div class="field"><label>Diagnostico principal</label><div>'+escapePrintHtml(data.dx)+'</div></div><div class="field"><label>Diagnosticos secundarios</label><div>'+escapePrintHtml(data.dx2)+'</div></div><div class="field"><label>Visita / duracion</label><div>'+escapePrintHtml([data.visit,data.duration].filter(Boolean).join(' - '))+'</div></div></div><div class="vitals">'+vitals+'</div>'+sections+'<div class="footer-note">Documento generado por DrNoteAI. Revisar, corregir y validar clinicamente antes de incorporar a la historia clinica.</div><div class="signatures"><div class="sig"><div class="line"></div>Firma del medico<small>'+escapePrintHtml(data.doctor)+'</small></div><div class="sig"><div class="line"></div>Sello profesional<div class="stamp">Sello / matricula</div></div></div></section></main></body></html>';
+}
+
+function openSoapPrintWindow(data){
+  const html=buildSoapPrintHtml(data);
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const win=window.open(url,'_blank');
+  if(!win){ showToast('Popup bloqueado. Permite popups para imprimir.'); URL.revokeObjectURL(url); return; }
+  setTimeout(()=>URL.revokeObjectURL(url),5000);
+}
 
 // ── APPROVE FINAL ──
 function approveFinal(){
@@ -1781,8 +1943,7 @@ function approveFinal(){
   btn.classList.add('approved'); btn.textContent='✓ Aprobada';
   document.getElementById('completedBanner').classList.add('show');
   if(ctRunning) toggleConsultTimer();
-  showToast('Nota aprobada y guardada');
-  saveDraft();
+  showToast('Nota aprobada. Usa "Guardar borrador" para guardar localmente.');
 }
 
 // ── RESET ──
@@ -1800,10 +1961,23 @@ function resetDictado(){
   document.getElementById('approvePct').textContent='0%';
   document.getElementById('btnApprove').className='btn-approve';
   document.getElementById('btnApprove').textContent='Aprobar nota';
+  document.getElementById('reviewActions').classList.remove('show');
   document.getElementById('completedBanner').classList.remove('show');
 }
 
 // ── TOAST ──
+function rediarizeNote(){
+  resetDictado();
+  clearTranscript();
+  showToast('Reiniciando diarizacion...');
+  startRec();
+}
+
+// ── VISIBILITY CHANGE ──
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden && recState==='recording') stopRec();
+});
+
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2400); }
 
 // ── CIE-10 AUTOCOMPLETE (curado: reumatología + medicina interna) ──
@@ -1900,10 +2074,16 @@ function cie10Suggest(inp, listId){
     c.toLowerCase().includes(term) || d.toLowerCase().includes(term) ||
     d.toLowerCase().split(' ').some(w=>w.startsWith(term))
   ).slice(0,10);
-  if(!matches.length){ list.innerHTML='<div class="cie10-empty">Sin coincidencias CIE-10</div>'; list.style.display='block'; return; }
-  list.innerHTML = matches.map(([c,d])=>
-    `<div class="cie10-item" onmousedown="cie10Pick('${inp.id}','${listId}','${c}','${d.replace(/'/g,"\\'")}')"><span class="cie10-desc">${d}</span><span class="cie10-code">${c}</span></div>`
-  ).join('');
+  list.innerHTML='';
+  if(!matches.length){ const empty=document.createElement('div'); empty.className='cie10-empty'; empty.textContent='Sin coincidencias CIE-10'; list.appendChild(empty); list.style.display='block'; return; }
+  matches.slice(0,15).forEach(([c,d])=>{
+    const item=document.createElement('div'); item.className='cie10-item';
+    const descEl=document.createElement('span'); descEl.className='cie10-desc'; descEl.textContent=d;
+    const codeEl=document.createElement('span'); codeEl.className='cie10-code'; codeEl.textContent=c;
+    item.appendChild(descEl); item.appendChild(codeEl);
+    item.addEventListener('mousedown',()=>cie10Pick(inp.id,listId,c,d));
+    list.appendChild(item);
+  });
   list.style.display='block';
 }
 function cie10Pick(inputId, listId, code, desc){
@@ -1931,30 +2111,29 @@ function importFromMobile(codeOverride){
   let raw=(codeOverride||(input?input.value:'')||'').trim();
   if(!raw){ showToast('Pega el código o URL del móvil primero'); return; }
   try{
-    // Si pegaron URL completa, extraer el parámetro dicta= o nota=
     if(raw.indexOf('http')===0 || raw.indexOf('?')>-1){
       const q=raw.split('?')[1]||'';
       const usp=new URLSearchParams(q);
-      raw = usp.get('dicta')||usp.get('nota')||raw;
+      raw=usp.get('dicta')||usp.get('nota')||raw;
     }
-    const json=decodeURIComponent(escape(atob(raw)));
+    // Use TextDecoder instead of deprecated escape/unescape
+    const bytes=Uint8Array.from(atob(raw),c=>c.charCodeAt(0));
+    const json=new TextDecoder().decode(bytes);
     const payload=JSON.parse(json);
-    // Rellenar paciente si viene
+    // Validate fields
+    if(typeof payload.paciente!=='string'||payload.paciente.length>200) throw new Error('Datos inválidos');
     if(payload.paciente){ const el=document.getElementById('ctx-name'); if(el) el.textContent=payload.paciente; const fn=document.getElementById('f-nombre'); if(fn) fn.value=payload.paciente; }
     if(payload.dx){ const el=document.getElementById('ctx-diag'); if(el) el.textContent=payload.dx; }
-    // Rellenar formato si viene
     if(payload.fmt){
       const cards=document.querySelectorAll('.fmt-card');
       cards.forEach(c=>c.classList.remove('selected'));
       const card=document.querySelector('.fmt-card[onclick*="\''+payload.fmt+'\'"]');
       if(card){ card.classList.add('selected'); currentFmt=payload.fmt; }
     }
-    // Cargar transcripción cruda en el textarea
     if(payload.transcript){
       const ta=document.getElementById('transcriptArea');
       if(ta){ ta.value=payload.transcript; liveTranscript=payload.transcript; }
     }
-    // Si hay secciones ya generadas, mostrarlas
     if(payload.secs && payload.secs.length){
       const secDefs=fmtSections[payload.fmt||currentFmt]||fmtSections.control;
       const merged=secDefs.map(function(s,i){
@@ -1965,26 +2144,28 @@ function importFromMobile(codeOverride){
     }
     showToast('Importado desde móvil ✓ ('+(payload.transcript?'transcripción':'nota')+' lista)');
     if(input) input.value='';
-    // Saltar al tab Dictado
-    const dictTab=document.querySelector('.tab[onclick*="dictado"],.tab[onclick*="1"]');
   }catch(e){
-    console.error(e);
+    console.warn('Import error:', e.message);
     showToast('Código inválido: '+e.message);
   }
 }
-// Auto-import si la URL ya trae ?dicta= o ?nota=
+// Show banner if URL has ?dicta= or ?nota= — do NOT auto-import without user confirmation
 (function(){
   try{
     const usp=new URLSearchParams(location.search);
     const code=usp.get('dicta')||usp.get('nota');
-    if(code) setTimeout(()=>importFromMobile(code), 400);
+    if(code){
+      const input=document.getElementById('importCode');
+      if(input) input.value=code;
+      showToast('Datos del móvil disponibles. Presiona "Cargar" para importar.');
+    }
   }catch(e){}
 })();
 
 function validateApiKeyFastDesktop(key){
   const ctrl=new AbortController();
   const timeout=setTimeout(()=>ctrl.abort(), 6000);
-  return fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+encodeURIComponent(key), { signal: ctrl.signal })
+  return fetch('https://generativelanguage.googleapis.com/v1beta/models', { signal: ctrl.signal, headers:{'x-goog-api-key':key} })
     .then(async resp => {
       let data={};
       try{ data=await resp.json(); }catch(_){ data={}; }
@@ -2038,6 +2219,13 @@ startRec = async function(){
     resetRecUiDesktop('Tu navegador no soporta reconocimiento de voz. Usa Chrome o Edge.','var(--amber)');
     return;
   }
+  srSt.textContent='Solicitando acceso al micrófono...';
+  srSt.style.color='var(--amber)';
+  const micAccess=await ensureMicAccessDesktop();
+  if(!micAccess.ok){
+    resetRecUiDesktop(micAccess.error,'var(--red)');
+    return;
+  }
   recState='recording';
   dictSecs=0;
   liveTranscript='';
@@ -2086,12 +2274,13 @@ calcDas28 = function(){
   const actEl=document.getElementById('das-act');
   const pinEl=document.getElementById('das-pin');
   const badgeEl=document.getElementById('das-badge');
+  const resultBox=document.getElementById('das-result-box');
   if(!tenderEl || !swollenEl || !vasEl || !pcrEl || !valEl || !actEl || !pinEl || !badgeEl) return;
   const t28=parseFloat(tenderEl.value)||0;
   const s28=parseFloat(swollenEl.value)||0;
   const vas=parseFloat(vasEl.value)||0;
   const pcr=parseFloat(pcrEl.value)||0;
-  if(!t28&&!s28) return;
+  if(!t28&&!s28){ if(resultBox) resultBox.style.display='none'; return; }
   const score=0.56*Math.sqrt(t28)+0.28*Math.sqrt(s28)+0.36*Math.log(pcr+1)+0.014*vas+0.96;
   const v=score.toFixed(2);
   valEl.textContent=v;
@@ -2102,7 +2291,170 @@ calcDas28 = function(){
   actEl.textContent=label;
   valEl.className='das-number '+cls;
   badgeEl.textContent='DAS28: '+v;
+  if(resultBox) resultBox.style.display='flex';
 };
+
+// ── WIFI SYNC: DESKTOP RECEIVER ──
+let syncPcD=null, syncChannelD=null;
+
+function syncEncode(obj){
+  return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
+}
+
+function syncDecode(code){
+  const raw=String(code||'').trim().replace(/^drnote-sync:/,'');
+  if(!raw) throw new Error('código vacío');
+  return JSON.parse(decodeURIComponent(escape(atob(raw))));
+}
+
+function buildMobileSyncUrl(syncCode){
+  const url=new URL(location.href);
+  url.pathname=url.pathname.replace(/dictaai_desktop_dark\.html$/,'dictaai_mobile_dark.html');
+  if(!/dictaai_mobile_dark\.html$/.test(url.pathname)){
+    url.pathname=url.pathname.replace(/\/?$/,'/dictaai_mobile_dark.html');
+  }
+  url.search='';
+  url.hash='syncOffer='+encodeURIComponent(syncCode);
+  return url.toString();
+}
+
+function renderDesktopSyncQr(syncCode){
+  const wrap=document.getElementById('syncQrWrapD');
+  const box=document.getElementById('syncQrD');
+  const linkEl=document.getElementById('syncMobileLinkD');
+  const link=buildMobileSyncUrl(syncCode);
+  if(linkEl) linkEl.textContent=link;
+  if(wrap) wrap.classList.add('show');
+  if(!box) return;
+  box.innerHTML='';
+  if(window.QRCode){
+    new QRCode(box,{text:link,width:128,height:128,colorDark:'#071412',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.L});
+  }else{
+    box.textContent='QR no disponible';
+  }
+}
+
+function waitForIceComplete(pc){
+  return new Promise(resolve=>{
+    if(pc.iceGatheringState==='complete') return resolve();
+    const done=()=>{ if(pc.iceGatheringState==='complete'){ pc.removeEventListener('icegatheringstatechange',done); resolve(); } };
+    pc.addEventListener('icegatheringstatechange',done);
+    setTimeout(resolve,2200);
+  });
+}
+
+function setDesktopSyncState(state,msg){
+  const pill=document.getElementById('syncPillD');
+  const st=document.getElementById('syncStatusD');
+  if(pill){
+    pill.className='sync-pill'+(state==='connected'?' connected':state==='waiting'?' waiting':'');
+    pill.textContent=state==='connected'?'Sync OK':state==='waiting'?'Sync...':'Sync';
+  }
+  if(st) st.textContent=msg||'';
+}
+
+function openDesktopSyncModal(){ document.getElementById('syncModalD').classList.add('show'); }
+function closeDesktopSyncModal(){ document.getElementById('syncModalD').classList.remove('show'); }
+
+async function createDesktopSyncOffer(){
+  try{
+    if(syncPcD) syncPcD.close();
+    syncPcD=new RTCPeerConnection({iceServers:[]});
+    syncChannelD=syncPcD.createDataChannel('drnoteai-live');
+    setupDesktopSyncChannel(syncChannelD);
+    syncPcD.onconnectionstatechange=function(){
+      if(['failed','disconnected','closed'].includes(syncPcD.connectionState)) setDesktopSyncState('idle','Sync desconectado.');
+    };
+    const offer=await syncPcD.createOffer();
+    await syncPcD.setLocalDescription(offer);
+    await waitForIceComplete(syncPcD);
+    const syncCode='drnote-sync:'+syncEncode(syncPcD.localDescription);
+    document.getElementById('syncOfferD').value=syncCode;
+    renderDesktopSyncQr(syncCode);
+    setDesktopSyncState('waiting','Código PC listo. Pégalo en el móvil y luego pega aquí la respuesta.');
+    showToast('QR Sync generado');
+  }catch(e){
+    setDesktopSyncState('idle','No se pudo crear Sync: '+e.message);
+  }
+}
+
+function copyDesktopSyncOffer(){
+  const value=document.getElementById('syncOfferD').value;
+  if(!value){ showToast('Primero genera el código PC'); return; }
+  navigator.clipboard.writeText(value).then(()=>showToast('Código PC copiado')).catch(()=>showToast('No se pudo copiar'));
+}
+
+async function acceptMobileSyncAnswer(){
+  try{
+    if(!syncPcD){ showToast('Primero genera el código PC'); return; }
+    const answer=syncDecode(document.getElementById('syncAnswerD').value);
+    await syncPcD.setRemoteDescription(new RTCSessionDescription(answer));
+    setDesktopSyncState('waiting','Conectando con el móvil...');
+  }catch(e){
+    setDesktopSyncState('idle','Respuesta inválida: '+e.message);
+  }
+}
+
+function setupDesktopSyncChannel(ch){
+  ch.onopen=function(){
+    setDesktopSyncState('connected','Sync conectado. El dictado del móvil aparecerá aquí en vivo.');
+    closeDesktopSyncModal();
+    showToast('Sync móvil conectado ✓');
+  };
+  ch.onclose=function(){ setDesktopSyncState('idle','Sync desconectado.'); };
+  ch.onmessage=function(ev){
+    try{ handleDesktopSyncMessage(JSON.parse(ev.data)); }catch(_){}
+  };
+}
+
+function handleDesktopSyncMessage(msg){
+  if(!msg || !msg.type) return;
+  if(msg.type==='patient'){
+    const nameEl=document.getElementById('f-nombre');
+    const dxEl=document.getElementById('f-diag');
+    if(nameEl && msg.patient){ nameEl.value=msg.patient; syncHeader(); }
+    if(dxEl && msg.dx){ dxEl.value=msg.dx; syncCtx(); }
+  }
+  if(msg.type==='state'){
+    const sr=document.getElementById('srStatus');
+    if(sr){ sr.textContent='Sync móvil: '+(msg.state||'activo'); sr.style.color=msg.state==='recording'?'var(--teal)':'var(--g4)'; }
+    if(msg.state==='recording') markDesktopSyncRecording();
+    if(msg.state==='stopping' && recState==='recording') stopRec();
+  }
+  if(msg.type==='transcript'){
+    if(recState==='idle') markDesktopSyncRecording();
+    const ta=document.getElementById('transcriptArea');
+    document.getElementById('transcriptBox').style.display='block';
+    liveTranscript=msg.text||'';
+    if(ta) ta.value=liveTranscript;
+    const sr=document.getElementById('srStatus');
+    if(sr){ sr.textContent='Recibiendo dictado desde móvil por Sync...'; sr.style.color='var(--teal)'; }
+    const lbl=document.getElementById('micLbl');
+    if(lbl) lbl.textContent='Dictado móvil sincronizado';
+  }
+}
+
+function markDesktopSyncRecording(){
+  if(recState!=='recording'){
+    recState='recording';
+    dictSecs=0;
+    clearInterval(timerInt);
+    timerInt=setInterval(()=>{
+      dictSecs++;
+      const rt=document.getElementById('rtimer');
+      if(rt) rt.textContent=Math.floor(dictSecs/60)+':'+(dictSecs%60).toString().padStart(2,'0');
+    },1000);
+  }
+  document.getElementById('transcriptBox').style.display='block';
+  const micBtn=document.getElementById('micBtn');
+  if(micBtn){ micBtn.classList.remove('idle'); micBtn.classList.add('recording'); }
+  const wave=document.getElementById('wave');
+  if(wave) wave.classList.add('show');
+  const lbl=document.getElementById('micLbl');
+  if(lbl) lbl.textContent='Recibiendo desde móvil — toca para generar';
+  const rt=document.getElementById('rtimer');
+  if(rt) rt.classList.add('show');
+}
 
 (function bindDesktopMic(){
   const micBtn=document.getElementById('micBtn');
