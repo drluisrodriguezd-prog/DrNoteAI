@@ -1112,6 +1112,7 @@ button[style*="background: var(--teal)"] {
           <label>API Key de Google Gemini (gratuita)</label>
           <input type="password" id="apiKeyInput" placeholder="AIzaSy..." style="font-family:'Geist Mono',monospace;font-size:12px" oninput="markApiKeyReadyDesktop()" autocomplete="new-password">
         </div>
+        <button type="button" onclick="loadDemoApiDesktop(event)" style="margin-top:8px;border:1px solid rgba(125,235,209,.20);background:linear-gradient(180deg,rgba(20,44,45,.92),rgba(8,18,24,.96));color:#9fe8d8;border-radius:10px;padding:8px 12px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 6px 14px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.06)">Cargar API demo</button>
         <div style="font-size:11px;color:var(--g4);margin-top:6px;line-height:1.5">Obtén tu key gratis en <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--teal);text-decoration:none">aistudio.google.com/app/apikey</a>. Para demo puede precargarse solo en este navegador; no se escribe en el HTML público.</div>
       </div>
     </div>
@@ -2578,6 +2579,35 @@ function markApiKeyReadyDesktop(){
     localStorage.setItem('drnoteai_gemini_api_key', key);
   }catch(_){}
   setApiBadgeDesktop('ready','API cargada — validar');
+}
+
+async function loadDemoApiDesktop(ev){
+  if(ev){ ev.preventDefault(); ev.stopPropagation(); }
+  let key='';
+  try{
+    if(navigator.clipboard && navigator.clipboard.readText){
+      key=(await navigator.clipboard.readText()||'').trim();
+    }
+  }catch(_){}
+  if(!key || !key.startsWith('AIza')){
+    key=(prompt('Pega aquí la API demo de Google Gemini:')||'').trim();
+  }
+  if(!key) return;
+  const input=document.getElementById('apiKeyInput');
+  const body=document.getElementById('apiBody');
+  if(input) input.value=key;
+  if(!key.startsWith('AIza')){
+    setApiBadgeDesktop('error','Formato inválido');
+    if(body) body.classList.add('open');
+    return;
+  }
+  try{
+    sessionStorage.setItem('drnoteai_gemini_api_key', key);
+    localStorage.setItem('drnoteai_gemini_api_key', key);
+  }catch(_){}
+  if(body) body.classList.remove('open');
+  setApiBadgeDesktop('ready','API demo cargada — validar');
+  showToast('API demo cargada. Presiona Validar.');
 }
 
 function readPreloadedApiKeyDesktop(){
