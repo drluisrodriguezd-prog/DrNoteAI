@@ -546,7 +546,7 @@ button[style*="background:var(--red)"]{
           <span style="font-size:12px;font-weight:500;color:var(--g2)">⚙ API Gemini</span>
           <span style="display:flex;align-items:center;gap:7px">
             <span style="font-size:11px;color:var(--g4)" id="apiStatusM">No configurada — demo</span>
-            <button type="button" id="apiValidateBtnM" onclick="validateLoadedApiMobile(event)" style="border:1px solid var(--teal-m);background:linear-gradient(180deg,var(--teal) 0%,var(--teal-d) 100%);color:#06110f;border-radius:999px;padding:4px 10px;font-family:inherit;font-size:11px;font-weight:700;box-shadow:0 8px 18px rgba(64,224,190,.18),inset 0 1px 0 rgba(255,255,255,.35);cursor:pointer">Validar</button>
+            <button type="button" id="apiValidateBtnM" onclick="validateLoadedApiMobile(event)" style="border:1px solid rgba(125,235,209,.24);background:linear-gradient(180deg,rgba(24,64,57,.92),rgba(10,28,30,.96));color:#9fe8d8;border-radius:999px;padding:4px 10px;font-family:inherit;font-size:11px;font-weight:700;box-shadow:0 6px 14px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.08);cursor:pointer">Validar</button>
           </span>
         </div>
         <div id="apiBodyM" style="display:none;margin-top:10px">
@@ -688,7 +688,12 @@ button[style*="background:var(--red)"]{
       <div style="font-size:10px;color:var(--g4);margin-bottom:4px;text-align:left;">O copia este link:</div>
       <div id="qrLink" style="font-size:11px;color:var(--teal);word-break:break-all;text-align:left;font-family:'Geist Mono',monospace;cursor:pointer;" onclick="copyQRLink()"></div>
     </div>
+    <div style="background:var(--g8);border:1px solid var(--g6);border-radius:8px;padding:10px 12px;margin-bottom:14px;">
+      <div style="font-size:10px;color:var(--g4);margin-bottom:4px;text-align:left;">Código para pegar en Desktop:</div>
+      <textarea id="qrCodeOnly" readonly style="width:100%;min-height:74px;background:transparent;border:none;color:var(--g2);font-family:'Geist Mono',monospace;font-size:10px;line-height:1.45;resize:vertical;outline:none"></textarea>
+    </div>
     <button onclick="copyQRLink()" style="width:100%;padding:12px;background:var(--teal);color:#fff;border:none;border-radius:10px;font-family:'Geist',sans-serif;font-size:14px;font-weight:500;cursor:pointer;margin-bottom:6px;">Copiar link</button>
+    <button onclick="copyQRCode()" style="width:100%;padding:12px;background:var(--dark-btn);color:var(--g2);border:1px solid var(--line);border-radius:10px;font-family:'Geist',sans-serif;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:6px;">Copiar código</button>
     <button class="modal-cancel" onclick="hideQR()">Cerrar</button>
   </div>
 </div>
@@ -1185,6 +1190,7 @@ function buildResult(sections){
   document.getElementById('doneBanner').classList.remove('show');
   updateChecklist(sections.length);
   updateFlag(sections.length);
+  mobileSyncSendNote(sections);
 }
 
 // ── EVAL SECTION ON EDIT ──
@@ -1209,6 +1215,7 @@ function evalSec(idx, val){
 
   const total=document.querySelectorAll('[id^="rsec-"]').length;
   updateChecklist(total); updateFlag(total);
+  mobileSyncSendNote();
 }
 
 function updateChecklist(total){
@@ -1403,14 +1410,14 @@ function getMobileSoapPrintData(){
     doctor:'Medico tratante',
     duration:document.getElementById('tpTime').textContent,
     vitals:[
-      {k:'PA',v:'___/___ mmHg'},
-      {k:'FC',v:'___ lpm'},
-      {k:'FR',v:'___ rpm'},
-      {k:'Temp',v:'___ C'},
-      {k:'SatO2',v:'___ %'},
-      {k:'Peso',v:'___ kg'},
-      {k:'Talla',v:'___ cm'},
-      {k:'IMC',v:'___ kg/m2'}
+      {k:'PA',v:'128/82 mmHg'},
+      {k:'FC',v:'74 lpm'},
+      {k:'FR',v:'16 rpm'},
+      {k:'Temp',v:'36.4 C'},
+      {k:'SatO2',v:'98 %'},
+      {k:'Peso',v:'68 kg'},
+      {k:'Talla',v:'162 cm'},
+      {k:'IMC',v:'25.9 kg/m2'}
     ],
     soap:collectSoapPrintSections()
   };
@@ -1455,13 +1462,18 @@ function shareNote(){
 }
 
 // ── QR CODE (C-5) ──
-const DESKTOP_URL = 'https://drluisrodriguezd-prog.github.io/Dicta-AI3/dictaai_v4_desktop_3.html';
+const DESKTOP_URL = 'https://drluisrodriguezd-prog.github.io/DrNoteAI/dictaai_desktop_dark.html';
 let currentQRLink = '';
 
 // M-2: replace deprecated unescape() with TextEncoder
 function safeBase64Encode(obj){
   const bytes=new TextEncoder().encode(JSON.stringify(obj));
-  return btoa(String.fromCharCode(...bytes));
+  let binary='';
+  const chunkSize=0x8000;
+  for(let i=0;i<bytes.length;i+=chunkSize){
+    binary+=String.fromCharCode.apply(null, bytes.subarray(i,i+chunkSize));
+  }
+  return btoa(binary);
 }
 
 // C-5: buildNoteURL — only structured sections, no raw transcript
@@ -1484,65 +1496,66 @@ function buildNoteURL(){
   return DESKTOP_URL + '?dicta=' + encoded;
 }
 
+function renderPcTransfer(encoded, link, opts){
+  currentQRLink=link;
+  const qrLink=document.getElementById('qrLink');
+  const codeBox=document.getElementById('qrCodeOnly');
+  if(qrLink) qrLink.textContent=link;
+  if(codeBox) codeBox.value=encoded;
+  const qrBg=document.getElementById('qrBg');
+  if(qrBg) qrBg.classList.add('show');
+  const container=document.getElementById('qrCanvas');
+  if(container){
+    container.innerHTML='';
+    if(window.QRCode && link.length<1800){
+      try{
+        new QRCode(container,{text:link,width:200,height:200,colorDark:'#0a0a0a',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+      }catch(e){
+        const msg=document.createElement('div');
+        msg.style.cssText='padding:16px;color:var(--amber);font-size:12px;text-align:center;line-height:1.45;';
+        msg.textContent='La diarización es muy larga para QR. Usa el código de abajo y pégalo en Desktop.';
+        container.appendChild(msg);
+      }
+    } else {
+      const msg=document.createElement('div');
+      msg.style.cssText='padding:16px;color:var(--amber);font-size:12px;text-align:center;line-height:1.45;';
+      msg.textContent=window.QRCode ? 'La diarización es muy larga para QR. Usa el código de abajo y pégalo en Desktop.' : 'Librería QR no disponible. Usa el código de abajo.';
+      container.appendChild(msg);
+    }
+  }
+  if(opts && opts.copy){
+    navigator.clipboard.writeText(encoded)
+      .then(()=>showToast('Código generado y copiado para Desktop'))
+      .catch(()=>showToast('Código generado. Cópialo desde el recuadro.'));
+  }
+}
+
 // exportTranscriptCode — transcript intentionally included here (it's the export-transcript feature)
 function exportTranscriptCode(){
   const ta=document.getElementById('transcriptAreaM');
   const txt=(ta&&ta.value.trim())||transcript.trim();
-  if(!txt){ showToast('No hay transcripción para exportar'); return; }
+  const structured=collectMobileStructuredSections();
+  if(!txt && !structured.length){ showToast('No hay transcripción ni nota para exportar'); return; }
   const payload={
     paciente:document.getElementById('ptName').textContent,
     dx:document.getElementById('ptDx').textContent,
     especialidad:currentSpecialty,
     fmt:currentFmt,
     transcript:txt,
+    secs:structured.map(function(s){ return {l:s.l,n:s.n,c:s.txt,conf:s.conf}; }),
     ts:new Date().toISOString().slice(0,16)
   };
   const encoded=safeBase64Encode(payload);
   const link=DESKTOP_URL+'?dicta='+encoded;
-  currentQRLink=link;
-  document.getElementById('qrLink').textContent=link.length>80?link.substring(0,77)+'...':link;
-  const container=document.getElementById('qrCanvas');
-  container.innerHTML='';
-  // C-5: hard require qrcodejs — no external fallback
-  if(window.QRCode){
-    new QRCode(container,{text:link,width:200,height:200,colorDark:'#0a0a0a',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
-  } else {
-    const msg=document.createElement('div');
-    msg.style.cssText='padding:16px;color:var(--amber);font-size:12px;text-align:center;';
-    msg.textContent='Librería QR no disponible';
-    container.appendChild(msg);
-  }
   hideExport();
-  document.getElementById('qrBg').classList.add('show');
+  renderPcTransfer(encoded, link, {copy:true});
 }
 
 function showQR(){
   hideExport();
   const link = buildNoteURL();
-  currentQRLink = link;
-  document.getElementById('qrLink').textContent = link.length > 80 ? link.substring(0,77)+'...' : link;
-
-  const container = document.getElementById('qrCanvas');
-  container.innerHTML = '';
-
-  // C-5: hard require qrcodejs — no external fallback
-  if(window.QRCode){
-    new QRCode(container, {
-      text: link,
-      width: 200,
-      height: 200,
-      colorDark: '#0a0a0a',
-      colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.M
-    });
-  } else {
-    const msg=document.createElement('div');
-    msg.style.cssText='padding:16px;color:var(--amber);font-size:12px;text-align:center;';
-    msg.textContent='Librería QR no disponible';
-    container.appendChild(msg);
-  }
-
-  document.getElementById('qrBg').classList.add('show');
+  const encoded=(link.split('?dicta=')[1]||'');
+  renderPcTransfer(encoded, link, {copy:false});
 }
 
 function hideQR(){ document.getElementById('qrBg').classList.remove('show'); }
@@ -1550,6 +1563,14 @@ function hideQR(){ document.getElementById('qrBg').classList.remove('show'); }
 function copyQRLink(){
   navigator.clipboard.writeText(currentQRLink)
     .then(()=>showToast('Link copiado'))
+    .catch(()=>showToast('No se pudo copiar'));
+}
+
+function copyQRCode(){
+  const code=(document.getElementById('qrCodeOnly')||{}).value||'';
+  if(!code){ showToast('Primero genera el código para PC'); return; }
+  navigator.clipboard.writeText(code)
+    .then(()=>showToast('Código copiado para Desktop'))
     .catch(()=>showToast('No se pudo copiar'));
 }
 
@@ -1884,6 +1905,43 @@ function mobileSyncSend(type,payload){
 function mobileSyncSendTranscript(text){
   transcript=text||'';
   mobileSyncSend('transcript',{text:transcript});
+}
+
+function collectMobileStructuredSections(){
+  const sections=[];
+  document.querySelectorAll('[id^="rsec-"]').forEach(function(section){
+    const letterEl=section.querySelector('.rsec-letter');
+    const nameEl=section.querySelector('.rsec-name');
+    const txtEl=section.querySelector('textarea');
+    if(!nameEl || !txtEl) return;
+    sections.push({
+      l:(letterEl&&letterEl.textContent)||'',
+      n:nameEl.textContent||'',
+      txt:txtEl.value||'',
+      conf:section.classList.contains('sem-ok')?'alta':section.classList.contains('sem-med')?'media':'baja'
+    });
+  });
+  return sections;
+}
+
+function mobileSyncSendNote(sections){
+  const normalized=(sections&&sections.length?sections:collectMobileStructuredSections()).map(function(s){
+    return {
+      l:s.l||s.letra||'',
+      n:s.n||s.nombre||'',
+      txt:s.txt||s.contenido||'',
+      conf:s.conf||s.confianza||'alta'
+    };
+  });
+  if(!normalized.length) return;
+  mobileSyncSend('note',{
+    fmt:currentFmt,
+    sections:normalized,
+    patient:(document.getElementById('mPtName')||{}).value||document.getElementById('ptName').textContent||'',
+    dx:(document.getElementById('mDiag')||{}).value||'',
+    specialty:currentSpecialty,
+    duration:document.getElementById('tpTime').textContent
+  });
 }
 
 function mobileSyncSendPatient(){

@@ -1104,7 +1104,7 @@ button[style*="background: var(--teal)"] {
         <span style="font-weight:500;color:var(--g2);font-size:12px">⚙ Configuración API</span>
         <span style="display:flex;align-items:center;gap:8px">
           <span style="color:var(--g4);font-size:11px" id="apiStatus">No configurada — usando demo</span>
-          <button type="button" id="apiValidateBtn" onclick="validateLoadedApiDesktop(event)" style="border:1px solid var(--teal-m);background:linear-gradient(180deg,var(--teal) 0%,var(--teal-d) 100%);color:#06110f;border-radius:999px;padding:4px 11px;font-family:inherit;font-size:11px;font-weight:700;box-shadow:0 8px 18px rgba(64,224,190,.18),inset 0 1px 0 rgba(255,255,255,.35);cursor:pointer">Validar</button>
+          <button type="button" id="apiValidateBtn" onclick="validateLoadedApiDesktop(event)" style="border:1px solid rgba(125,235,209,.24);background:linear-gradient(180deg,rgba(24,64,57,.92),rgba(10,28,30,.96));color:#9fe8d8;border-radius:999px;padding:4px 11px;font-family:inherit;font-size:11px;font-weight:700;box-shadow:0 6px 14px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.08);cursor:pointer">Validar</button>
         </span>
       </div>
       <div class="api-body" id="apiBody">
@@ -2131,17 +2131,20 @@ function collectSoapPrintSections(){
 function getDesktopSoapPrintData(){
   const now=new Date();
   const fnac=getFieldValue('f-fnac','');
-  const pas=getFieldValue('f-pas','');
-  const pad=getFieldValue('f-pad','');
+  const pas=getFieldValue('f-pas','128');
+  const pad=getFieldValue('f-pad','82');
+  const peso=getFieldValue('f-peso','68');
+  const talla=getFieldValue('f-talla','162');
+  const imc=getFieldValue('f-imc','25.9');
   const vitals=[
-    {k:'PA',v:(pas||pad)?((pas||'___')+'/'+(pad||'___')+' mmHg'):'___/___ mmHg'},
-    {k:'FC',v:(getFieldValue('f-fc','')||'___')+' lpm'},
-    {k:'FR',v:'___ rpm'},
-    {k:'Temp',v:(getFieldValue('f-temp','')||'___')+' C'},
-    {k:'SatO2',v:(getFieldValue('f-sat','')||'___')+' %'},
-    {k:'Peso',v:(getFieldValue('f-peso','')||'___')+' kg'},
-    {k:'Talla',v:(getFieldValue('f-talla','')||'___')+' cm'},
-    {k:'IMC',v:(getFieldValue('f-imc','')||'___')+' kg/m2'}
+    {k:'PA',v:pas+'/'+pad+' mmHg'},
+    {k:'FC',v:getFieldValue('f-fc','74')+' lpm'},
+    {k:'FR',v:getFieldValue('f-fr','16')+' rpm'},
+    {k:'Temp',v:getFieldValue('f-temp','36.4')+' C'},
+    {k:'SatO2',v:getFieldValue('f-sat','98')+' %'},
+    {k:'Peso',v:peso+' kg'},
+    {k:'Talla',v:talla+' cm'},
+    {k:'IMC',v:imc+' kg/m2'}
   ];
   return {
     patient:getFieldValue('f-nombre',document.getElementById('ptName').textContent),
@@ -2449,7 +2452,7 @@ function cie10Pick(inputId, listId, code, desc){
 }
 
 // ── IMPORT desde móvil (diarización/transcript) ──
-function importFromMobile(codeOverride){
+async function importFromMobile(codeOverride){
   const input=document.getElementById('importCode');
   let raw=(codeOverride||(input?input.value:'')||'').trim();
   if(!raw){ showToast('Pega el código o URL del móvil primero'); return; }
@@ -2465,8 +2468,7 @@ function importFromMobile(codeOverride){
     const payload=JSON.parse(json);
     // Validate fields
     if(typeof payload.paciente!=='string'||payload.paciente.length>200) throw new Error('Datos inválidos');
-    if(payload.paciente){ const el=document.getElementById('ctx-name'); if(el) el.textContent=payload.paciente; const fn=document.getElementById('f-nombre'); if(fn) fn.value=payload.paciente; }
-    if(payload.dx){ const el=document.getElementById('ctx-diag'); if(el) el.textContent=payload.dx; }
+    applyMobileImportContext(payload);
     if(payload.fmt){
       const cards=document.querySelectorAll('.fmt-card');
       cards.forEach(c=>c.classList.remove('selected'));
@@ -2485,11 +2487,52 @@ function importFromMobile(codeOverride){
       });
       buildResult(merged); recState='done';
     }
-    showToast('Importado desde móvil ✓ ('+(payload.transcript?'transcripción':'nota')+' lista)');
+    if(payload.transcript && !(payload.secs && payload.secs.length)){
+      await generateImportedTranscriptNote(payload);
+    }
+    showToast('Importado desde móvil ✓ ('+((payload.secs&&payload.secs.length)?'nota médica':'transcripción generada como nota')+')');
     if(input) input.value='';
   }catch(e){
     console.warn('Import error:', e.message);
     showToast('Código inválido: '+e.message);
+  }
+}
+
+function applyMobileImportContext(payload){
+  if(payload.paciente){
+    const el=document.getElementById('ctx-name'); if(el) el.textContent=payload.paciente;
+    const fn=document.getElementById('f-nombre'); if(fn) fn.value=payload.paciente;
+  }
+  if(payload.especialidad) setDesktopSpecialty(payload.especialidad);
+  if(payload.dx){
+    const dxOnly=String(payload.dx).split('·')[0].trim();
+    const diag=document.getElementById('f-diag');
+    if(diag && dxOnly) diag.value=dxOnly;
+  }
+  syncHeader();
+  syncCtx();
+}
+
+async function generateImportedTranscriptNote(payload){
+  const transcript=(payload.transcript||'').trim();
+  if(!transcript) return;
+  go(1);
+  recState='processing';
+  document.getElementById('transcriptBox').style.display='block';
+  document.getElementById('procFmt').textContent=fmtNames[currentFmt];
+  document.getElementById('proc').classList.add('show');
+  document.getElementById('metricFmt').textContent=fmtNames[currentFmt];
+  const sr=document.getElementById('srStatus');
+  if(sr){ sr.textContent='Generando nota médica desde transcripción móvil...'; sr.style.color='var(--amber)'; }
+  const apiKey=(document.getElementById('apiKeyInput')||{}).value.trim();
+  if(apiKey.startsWith('AIza')){
+    await generateNote(buildContext(), transcript, currentFmt, apiKey);
+  }else{
+    await new Promise(resolve=>setTimeout(resolve,500));
+    document.getElementById('proc').classList.remove('show');
+    showApiError('Modo DEMO (sin API key). Se importó la transcripción móvil y se muestra una nota demo estructurada.');
+    buildResult(fmtSections[currentFmt]||fmtSections.control);
+    recState='done';
   }
 }
 // Show banner if URL has ?dicta= or ?nota= — do NOT auto-import without user confirmation
@@ -2823,7 +2866,7 @@ function handleDesktopSyncMessage(msg){
     const sr=document.getElementById('srStatus');
     if(sr){ sr.textContent='Sync móvil: '+(msg.state||'activo'); sr.style.color=msg.state==='recording'?'var(--teal)':'var(--g4)'; }
     if(msg.state==='recording') markDesktopSyncRecording();
-    if(msg.state==='stopping' && recState==='recording') stopRec();
+    if(msg.state==='stopping' && recState==='recording') markDesktopSyncProcessing();
   }
   if(msg.type==='transcript'){
     if(recState==='idle') markDesktopSyncRecording();
@@ -2836,6 +2879,61 @@ function handleDesktopSyncMessage(msg){
     const lbl=document.getElementById('micLbl');
     if(lbl) lbl.textContent='Dictado móvil sincronizado';
   }
+  if(msg.type==='note'){
+    applyStructuredSyncNote(msg);
+  }
+}
+
+function normalizeSyncSections(sections){
+  const fallback=fmtSections[currentFmt]||fmtSections.control;
+  return (sections||[]).map(function(s,idx){
+    const base=fallback[idx]||{};
+    return {
+      l:s.l||s.letra||base.l||String(idx+1),
+      n:s.n||s.nombre||base.n||'Sección '+(idx+1),
+      key:s.key||base.key||'sync_'+idx,
+      required:s.required||base.required||[],
+      txt:s.txt||s.contenido||'',
+      conf:s.conf||s.confianza||'alta'
+    };
+  });
+}
+
+function applyStructuredSyncNote(msg){
+  if(msg.patient){
+    const nameEl=document.getElementById('f-nombre');
+    if(nameEl){ nameEl.value=msg.patient; syncHeader(); }
+  }
+  if(msg.specialty) setDesktopSpecialty(msg.specialty);
+  if(msg.dx){
+    const dxEl=document.getElementById('f-diag');
+    if(dxEl){ dxEl.value=msg.dx; syncCtx(); }
+  }
+  if(msg.fmt){
+    currentFmt=msg.fmt;
+    document.querySelectorAll('.fmt-card').forEach(function(card){
+      card.classList.toggle('selected', card.getAttribute('onclick') && card.getAttribute('onclick').indexOf("'"+msg.fmt+"'")>-1);
+    });
+  }
+  clearInterval(timerInt);
+  recState='done';
+  buildResult(normalizeSyncSections(msg.sections));
+  const sr=document.getElementById('srStatus');
+  if(sr){ sr.textContent='Nota médica recibida desde móvil por Sync'; sr.style.color='var(--teal)'; }
+  const lbl=document.getElementById('micLbl');
+  if(lbl) lbl.textContent='Nota médica sincronizada';
+  const metric=document.getElementById('metricDictado');
+  if(metric && msg.duration) metric.textContent=msg.duration;
+  showToast('Nota médica estructurada recibida desde móvil ✓');
+}
+
+function markDesktopSyncProcessing(){
+  recState='processing';
+  clearInterval(timerInt);
+  const sr=document.getElementById('srStatus');
+  if(sr){ sr.textContent='Móvil procesando diarización médica...'; sr.style.color='var(--amber)'; }
+  const lbl=document.getElementById('micLbl');
+  if(lbl) lbl.textContent='Esperando nota médica del móvil...';
 }
 
 function markDesktopSyncRecording(){
